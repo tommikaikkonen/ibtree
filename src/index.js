@@ -6,6 +6,7 @@ import {
     getEmptyIterator,
     tail,
     boundedChunk,
+    extend,
 } from './utils';
 import {
     ORDER,
@@ -54,7 +55,7 @@ export function BPlusTree(_opts) {
     this.height = opts.height || 0;
 }
 
-Object.assign(BPlusTree.prototype, {
+extend(BPlusTree.prototype, {
     has(key) {
         return this.search(this.comparator, key) !== NOT_FOUND;
     },
@@ -567,7 +568,7 @@ function fromSortedBase(arr, _opts, isPairs) {
     }
 
     const _constructor = this;
-    return new _constructor(Object.assign({}, opts, {
+    return new _constructor(extend({}, opts, {
         root: newRoot,
         size: arr.length,
         height: newHeight,

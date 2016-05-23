@@ -132,3 +132,22 @@ export const boundedChunk = (min, max, arr) => {
     }
     return chunks;
 };
+
+export function extend(target) {
+    const argsLen = arguments.length;
+    let source;
+    let keys;
+    let key;
+    let i;
+    let j;
+
+    for (j = 1; j < argsLen; j++) {
+        source = arguments[j];
+        keys = Object.keys(source);
+        for (i = 0; i < keys.length; i++) {
+            key = keys[i];
+            target[key] = source[key];
+        }
+    }
+    return target;
+}

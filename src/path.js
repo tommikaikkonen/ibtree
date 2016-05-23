@@ -1,6 +1,9 @@
 import {
     SHIFT_LEN,
 } from './constants';
+import {
+    extend,
+} from './utils';
 
 const MIN_PATH = 0;
 const NUMBER_OF_UNSIGNED_BITS = 31;
@@ -98,7 +101,7 @@ Path.from = function from(arr) {
     return new Path(SHIFT_LEN, levels, path);
 };
 
-Object.assign(Path.prototype, {
+extend(Path.prototype, {
     get(level) {
         return pathGet(this.shiftLen, level, this._path);
     },

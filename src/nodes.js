@@ -18,6 +18,7 @@ import {
     init,
     tail,
     median,
+    extend,
 } from './utils';
 
 const binSearch = binarySearch.eq;
@@ -38,7 +39,7 @@ Object.defineProperty(Node.prototype, 'size', {
     },
 });
 
-Object.assign(Node.prototype, {
+extend(Node.prototype, {
     satisfiesMinChildren() {
         return this.children.length >= this.minChildren;
     },
@@ -75,7 +76,7 @@ function Leaf(opts) {
 Leaf.prototype = Object.create(Node.prototype);
 Leaf.prototype.constructor = Leaf;
 
-Object.assign(Leaf.prototype, {
+extend(Leaf.prototype, {
     maxChildren: LEAF_MAX_CHILDREN,
 
     minChildren: LEAF_MIN_CHILDREN,
@@ -227,7 +228,7 @@ export const DELETION_STRATEGIES = {
 InternalNode.prototype = Object.create(Node.prototype);
 InternalNode.prototype.constructor = InternalNode;
 
-Object.assign(InternalNode.prototype, {
+extend(InternalNode.prototype, {
     maxChildren: INTERNAL_MAX_CHILDREN,
 
     minChildren: INTERNAL_MIN_CHILDREN,
