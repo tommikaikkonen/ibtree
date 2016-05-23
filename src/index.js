@@ -15,6 +15,7 @@ import {
     LEAF_MAX_CHILDREN,
     INTERNAL_MIN_CHILDREN,
     INTERNAL_MAX_CHILDREN,
+    ITERATOR_PROPNAME,
 } from './constants';
 
 const binSearch = binarySearch.eq;
@@ -333,9 +334,7 @@ Object.assign(BPlusTree.prototype, {
             },
         };
 
-        if (typeof Symbol !== 'undefined') {
-            iterator[Symbol.iterator] = () => iterator;
-        }
+        iterator[ITERATOR_PROPNAME] = () => iterator;
 
         return iterator;
     },
@@ -585,13 +584,11 @@ function fromSortedValues(arr, opts) {
 
 BPlusTree.from = fromSortedPairs;
 
-if (typeof Symbol !== 'undefined') {
-    BPlusTree.prototype[Symbol.iterator] = function iterator() {
-        return this.isSet
-            ? this.values()
-            : this.entries();
-    };
-}
+BPlusTree.prototype[ITERATOR_PROPNAME] = function iterator() {
+    return this.isSet
+        ? this.values()
+        : this.entries();
+};
 
 export const BTMap = BPlusTree;
 

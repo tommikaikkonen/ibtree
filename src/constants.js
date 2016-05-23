@@ -17,3 +17,7 @@ export const LEAF_MIN_CHILDREN = Math.ceil(ORDER / 2) - 1;
 export const LEAF_MAX_CHILDREN = ORDER - 1;
 export const INTERNAL_MIN_CHILDREN = Math.ceil(ORDER / 2);
 export const INTERNAL_MAX_CHILDREN = ORDER;
+
+export const ITERATOR_PROPNAME = typeof Symbol === 'function'
+    ? Symbol.iterator
+    : '@@iterator';

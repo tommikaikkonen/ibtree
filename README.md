@@ -13,9 +13,64 @@ A performant, in-memory, immutable B+ tree data structure.
 - Iteration
 - Similar performance to Immutable.Map using Map operations, considerably faster range search due to the B+ tree data structure
 
+## Getting Started
+
+### BTMap
+
+```javascript
+import { BTMap } from 'ibtree';
+
+let map = BTMap.from([
+    [1, 'one'],
+    [2, 'two'],
+    [3, 'three'],
+]);
+
+map = map.set(4, 'four');
+
+map.has(1)
+// true
+map.get(1)
+// 'one'
+
+Array.from(map.values())
+// ['one', 'two', 'three', 'four']
+
+// Range searches use the values/entries/keys API with
+// arguments to specify boundaries.
+Array.from(map.values(2, 3));
+// ['two', 'three']
+Array.from(map.values(3, 2));
+// ['three', 'two']
+```
+
+### BTSet
+
+```javascript
+import { BTSet } from 'ibtree';
+
+let set = BTSet.from([1, 2, 3]);
+
+set.has(1)
+// true
+set.has(4)
+// false
+set = set.add(0);
+set.has(0)
+// true
+
+Array.from(set.values())
+// [0, 1, 2, 3]
+
+Array.from(map.values(2, 3));
+// [2, 3]
+Array.from(map.values(2, -10));
+// [2, 1, 0]
+```
+
 ## Benchmark
 
-For `BTMap` is similar in performance to Immutable.Map. The range search is much faster because of the difference in data structures.
+`BTMap` is similar in performance to Immutable.Map. The range search is much faster because of the difference in data structures.
 
 The tradeoff between Immutable.Map and `BTMap` is that `BTMap` uses more memory to store updated trees.
 
@@ -100,11 +155,7 @@ Returns a new, empty BTMap. Override defaults with `opts` object. Defaults are:
 }
 ```
 
-### new BTSet(Object opts)
-
-Works the same as `new BTMap()` above.
-
-### Classmethod BTMap.from(Array<Array<*>> entries[, Object opts])
+### BTMap.from(Array&lt;Array&lt;*&gt;&gt; entries[, Object opts])
 
 Returns a new BTMap with data from a sorted array of `[key, value]` pairs. Uses a bulkloading algorithm internally, which is significantly faster than inserting values individually. `opts` works the same  as to `new BTMap(opts)`. `entries` must be an array of key-value pairs. Example:
 
@@ -121,8 +172,30 @@ map.get('key2');
 // 'value2'
 ```
 
+### BTMap Instance Methods
 
-### Classmethod BTSet.from(Array<*> values[, Object opts])
+- `delete(key)` and `set(key, value)` return a new, updated BTMap instance instead of mutating the current one.
+- `clear` returns an empty `BTMap`.
+
+These work the same as native Map:
+
+- `entries()`
+- `values()`
+- `keys()`
+- `get(key)`
+- `has(key)`
+- `[Symbol.iterator]()`
+
+### BTMap instance properties
+
+- `size`: Returns number of values in the map
+
+
+### new BTSet(Object opts)
+
+Works the same as `new BTMap()`.
+
+### BTSet.from(Array<*> values[, Object opts])
 
 Works the same as `BTMap.from`, except the first argument is a list of values instead of key-value pairs.
 
@@ -141,21 +214,7 @@ btree.has('value2');
 // true
 ```
 
-## BTMap instance methods
-
-- `delete(key)` and `set(key, value)` return a new, updated BTMap instance instead of mutating the current one.
-- `clear` returns an empty `BTMap`.
-
-These work the same as native Map:
-
-- `entries()`
-- `values()`
-- `keys()`
-- `get(key)`
-- `has(key)`
-- `[Symbol.iterator]()`
-
-## BTSet instance methods
+### BTSet instance methods
 
 - `delete(value)` and `add(value)` return a new, updated BTSet instance instead of mutating the current one.
 - `clear` returns an empty `BTSet`.
@@ -168,7 +227,12 @@ These work the same as native Set:
 - `has(value)`
 - `[Symbol.iterator]()`
 
-### Range Search Methods
+### BTSet instance properties
+
+- `size`: Returns number of values in the set
+
+
+## Range Search Methods for BTSet and BTMap
 
 The key benefit of B+ trees is the fast range search. Range searches extend the `entries`, `values` and `keys` instance methods to accept two arguments that specify the range boundaries.
 
@@ -203,15 +267,6 @@ Array.from(map.values(2, 5));
 Array.from(map.values(5, 2));
 // ['five', 'four', 'three', 'two']
 ```
-
-
-### BTMap instance properties
-
-- `size`: Returns number of values in the map
-
-### BTSet instance properties
-
-- `size`: Returns number of values in the set
 
 
 ## License

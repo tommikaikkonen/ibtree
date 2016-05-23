@@ -1,3 +1,7 @@
+import {
+    ITERATOR_PROPNAME,
+} from './constants';
+
 export const median = len => Math.ceil(len / 2);
 
 export function fastArraySlice(start, end, arr) {
@@ -106,7 +110,7 @@ export function getEmptyIterator() {
         next: () => ({ done: true }),
     };
 
-    iterator[Symbol.iterator] = () => iterator;
+    iterator[ITERATOR_PROPNAME] = () => iterator;
 
     return iterator;
 }

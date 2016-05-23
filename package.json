@@ -7,7 +7,7 @@
     "test": "make test",
     "prepublish": "make build"
   },
-  "keywords": [],
+  "keywords": ["b+ tree", "immutable", "data structure"],
   "author": "Tommi Kaikkonen <tommi.kaikkonen@aalto.fi>",
   "repository": {
     "type": "git",
