@@ -1,13 +1,17 @@
 {
   "name": "ibtree",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "A performant, in-memory, immutable B+ tree data structure",
   "main": "lib/index.js",
   "scripts": {
     "test": "make test",
     "prepublish": "make build"
   },
-  "keywords": ["b+ tree", "immutable", "data structure"],
+  "keywords": [
+    "b+ tree",
+    "immutable",
+    "data structure"
+  ],
   "author": "Tommi Kaikkonen <tommi.kaikkonen@aalto.fi>",
   "repository": {
     "type": "git",
