@@ -111,7 +111,7 @@ describe('Leaf', () => {
         });
 
         it('delete', () => {
-            const leafAfterDeletion = leaf.delete(cmp, '2');
+            const leafAfterDeletion = leaf.delete(cmp, null, '2');
 
             expect(leafAfterDeletion.keys).to.not.equal(leaf.keys);
             expect(leafAfterDeletion.children).to.not.equal(leaf.children);
@@ -121,7 +121,7 @@ describe('Leaf', () => {
         });
 
         it('delete when key doesn\'t exist', () => {
-            const leafAfterDeletion = leaf.delete(cmp, '4');
+            const leafAfterDeletion = leaf.delete(cmp, null, '4');
             expect(leafAfterDeletion).to.equal(leaf);
             expect(leafAfterDeletion.keys).to.deep.equal(['1', '2', '3']);
             expect(leafAfterDeletion.children).to.deep.equal([1, 2, 3]);
@@ -175,7 +175,7 @@ describe('Leaf', () => {
             const value = 999;
             // '25' should be inserted between '2' and '3'
             // due to lexicographic order.
-            const inserted = leaf.insert(cmp, '25', value);
+            const inserted = leaf.insert(cmp, null, '25', value);
 
             expect(inserted.keys).to.deep.equal(['1', '2', '25', '3']);
             expect(inserted.children).to.deep.equal([1, 2, value, 3]);
@@ -183,7 +183,7 @@ describe('Leaf', () => {
 
         it('insert smallest key', () => {
             const value = 0;
-            const inserted = leaf.insert(cmp, '0', value);
+            const inserted = leaf.insert(cmp, null, '0', value);
 
             expect(inserted.keys).to.deep.equal(['0', '1', '2', '3']);
             expect(inserted.children).to.deep.equal([value, 1, 2, 3]);
@@ -191,7 +191,7 @@ describe('Leaf', () => {
 
         it('insert largest key', () => {
             const value = 4;
-            const inserted = leaf.insert(cmp, '4', value);
+            const inserted = leaf.insert(cmp, null, '4', value);
 
             expect(inserted.keys).to.deep.equal(['1', '2', '3', '4']);
             expect(inserted.children).to.deep.equal([1, 2, 3, value]);
@@ -199,7 +199,7 @@ describe('Leaf', () => {
 
         it('insert - key already exists', () => {
             const value = 999;
-            const inserted = leaf.insert(cmp, '2', value);
+            const inserted = leaf.insert(cmp, null, '2', value);
 
             expect(inserted).to.not.equal(leaf);
             expect(inserted.keys).to.deep.equal(['1', '2', '3']);
@@ -208,7 +208,7 @@ describe('Leaf', () => {
 
         it('insert - key already exists and has equal value', () => {
             const value = 2;
-            const inserted = leaf.insert(cmp, '2', value);
+            const inserted = leaf.insert(cmp, null, '2', value);
             expect(inserted).to.equal(leaf);
         });
 
@@ -218,7 +218,7 @@ describe('Leaf', () => {
 
             const insertedKey = '25';
             const value = 999;
-            const [key, firstLeaf, secondLeaf] = leaf.insert(cmp, insertedKey, value);
+            const [key, firstLeaf, secondLeaf] = leaf.insert(cmp, null, insertedKey, value);
 
             expect(key).to.equal(insertedKey);
             expect(firstLeaf.keys).to.deep.equal(['1', '2']);
@@ -417,9 +417,9 @@ describe('InternalNode', () => {
             it('basic case', () => {
                 const childInsertSpy = sinon.spy(node.children[1], 'insert');
                 const value = 999;
-                const inserted = node.insert(cmp, '3', value);
+                const inserted = node.insert(cmp, null, '3', value);
 
-                expect(childInsertSpy).to.have.been.calledWith(cmp, '3', value);
+                expect(childInsertSpy).to.have.been.calledWith(cmp, null, '3', value);
 
                 expect(inserted.keys).to.equal(node.keys);
                 expect(inserted.children).to.have.lengthOf(node.children.length);
@@ -431,7 +431,7 @@ describe('InternalNode', () => {
             });
 
             it('returns the same child (no changes in child)', () => {
-                const inserted = node.insert(cmp, '2', 2);
+                const inserted = node.insert(cmp, null, '2', 2);
                 expect(inserted).to.equal(node);
             });
 
@@ -439,7 +439,7 @@ describe('InternalNode', () => {
                 const origShouldSplit = Leaf.prototype.shouldSplit;
                 Leaf.prototype.shouldSplit = () => true;
 
-                const inserted = node.insert(cmp, '25', 2.5);
+                const inserted = node.insert(cmp, null, '25', 2.5);
                 expect(inserted.keys).to.have.lengthOf(node.keys.length + 1);
                 expect(inserted.keys).to.deep.equal(['2', '3', '4', '6']);
 
@@ -614,7 +614,7 @@ describe('InternalNode', () => {
                 const _stub = sinon.stub(Leaf.prototype, 'satisfiesMinChildren');
                 _stub.returns(true);
 
-                const newNode = node.delete(cmp, '2');
+                const newNode = node.delete(cmp, null, '2');
                 expect(newNode.children[0]).to.equal(node.children[0]);
                 const newLeaf = newNode.children[1];
                 expect(newLeaf.keys).to.deep.equal(['3']);
@@ -629,7 +629,7 @@ describe('InternalNode', () => {
                 const _stub = sinon.stub(Leaf.prototype, 'satisfiesMinChildren');
                 _stub.returns(true);
 
-                const newNode = node.delete(cmp, '10');
+                const newNode = node.delete(cmp, null, '10');
                 expect(newNode).to.equal(node);
                 _stub.restore();
             });
@@ -641,7 +641,7 @@ describe('InternalNode', () => {
 
                 // When left and right sibling leafs are of the same size,
                 // the right one is selected for merging.
-                const newNode = node.delete(cmp, '2');
+                const newNode = node.delete(cmp, null, '2');
 
                 expect(newNode.keys).to.deep.equal(['3', '6']);
 
@@ -661,7 +661,7 @@ describe('InternalNode', () => {
                 _stub.returns(false);
 
                 // Deletes from rightmost leaf - will merge to left one.
-                const newNode = node.delete(cmp, '6');
+                const newNode = node.delete(cmp, null, '6');
                 expect(newNode.keys).to.deep.equal(['2', '4']);
 
                 expect(newNode.children).to.have.lengthOf(node.children.length - 1);
@@ -691,7 +691,7 @@ describe('InternalNode', () => {
                         strategy: DELETION_STRATEGIES.STEAL_KEY_FROM_LEFT,
                     });
 
-                const newNode = node.delete(cmp, '3');
+                const newNode = node.delete(cmp, null, '3');
                 expect(newNode.keys).to.deep.equal(['1', '4', '6']);
                 expect(newNode.children[0].keys).to.deep.equal(['0']);
                 expect(newNode.children[1].keys).to.deep.equal(['1', '2']);
@@ -715,7 +715,7 @@ describe('InternalNode', () => {
                         strategy: DELETION_STRATEGIES.STEAL_KEY_FROM_RIGHT,
                     });
 
-                const newNode = node.delete(cmp, '3');
+                const newNode = node.delete(cmp, null, '3');
                 expect(newNode.keys).to.deep.equal(['2', '5', '6']);
                 expect(newNode.children[1].keys).to.deep.equal(['2', '4']);
                 expect(newNode.children[2].keys).to.deep.equal(['5']);

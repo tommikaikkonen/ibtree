@@ -113,7 +113,7 @@ describe('BTree', () => {
             insertStub.returns([risingKey, leftChild, rightChild]);
 
             const withFour = tree.set(4, 4);
-            expect(insertStub).to.have.been.calledWith(tree.comparator, 4, 4);
+            expect(insertStub).to.have.been.calledWith(tree.comparator, tree.ownerID, 4, 4);
             expect(withFour.height).to.equal(tree.height + 1);
             expect(withFour.size).to.equal(tree.size + 1);
 
@@ -151,7 +151,7 @@ describe('BTree', () => {
 
             const withoutTwo = tree.delete(2);
 
-            expect(deleteSpy).to.have.been.calledWith(tree.comparator, 2);
+            expect(deleteSpy).to.have.been.calledWith(tree.comparator, tree.ownerID, 2);
             expect(withoutTwo).to.not.equal(tree);
             expect(withoutTwo.size).to.equal(tree.size - 1);
             expect(withoutTwo.height).to.equal(tree.height);
@@ -162,7 +162,7 @@ describe('BTree', () => {
             const deleteSpy = sinon.spy(tree.root, 'delete');
 
             const empty = tree.delete(1);
-            expect(deleteSpy).to.have.been.calledWith(tree.comparator, 1);
+            expect(deleteSpy).to.have.been.calledWith(tree.comparator, tree.ownerID, 1);
 
             expect(empty.size).to.equal(0);
             expect(empty.height).to.equal(tree.height);

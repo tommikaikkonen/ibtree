@@ -19,6 +19,7 @@ import {
     tail,
     median,
     extend,
+    tagOwnerID,
 } from './utils';
 
 const binSearch = binarySearch.eq;
@@ -30,6 +31,7 @@ function Node(_opts) {
     this.keys = opts.keys || [];
     this.children = opts.children || [];
     this.order = ORDER;
+    this.ownerID = opts.ownerID;
 }
 
 Object.defineProperty(Node.prototype, 'size', {
@@ -81,7 +83,7 @@ extend(Leaf.prototype, {
 
     minChildren: LEAF_MIN_CHILDREN,
 
-    delete(cmp, key) {
+    delete(cmp, ownerID, key) {
         const idx = binSearch(this.keys, key, cmp);
         // Key was not found. No modifications needed.
         if (idx === -1) {
@@ -118,7 +120,7 @@ extend(Leaf.prototype, {
         return binarySearch.gte(this.keys, key, cmp);
     },
 
-    insert(cmp, key, value) {
+    insert(cmp, ownerID, key, value) {
         const idx = this.idxForKey(cmp, key);
         const alreadyHasKey = this.keys[idx] === key;
 
@@ -308,10 +310,10 @@ extend(InternalNode.prototype, {
         }
     },
 
-    delete(cmp, key) {
+    delete(cmp, ownerID, key) {
         const childIdx = this.childIdxForKey(cmp, key);
         const origChild = this.children[childIdx];
-        const child = origChild.delete(cmp, key);
+        const child = origChild.delete(cmp, ownerID, key);
 
         if (origChild === child) return this;
 
@@ -471,11 +473,11 @@ extend(InternalNode.prototype, {
         });
     },
 
-    insert(cmp, key, value) {
+    insert(cmp, ownerID, key, value) {
         const childIdx = this.childIdxForKey(cmp, key);
         const child = this.children[childIdx];
 
-        const newChild = child.insert(cmp, key, value);
+        const newChild = child.insert(cmp, ownerID, key, value);
 
         if (child === newChild) return this;
 

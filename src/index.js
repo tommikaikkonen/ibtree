@@ -7,6 +7,7 @@ import {
     tail,
     boundedChunk,
     extend,
+    makeOwnerID,
 } from './utils';
 import {
     ORDER,
@@ -53,6 +54,7 @@ export function BPlusTree(_opts) {
     this.root = opts.root || new Leaf({ order: this.order });
     this.size = opts.size || 0;
     this.height = opts.height || 0;
+    this.ownerID = opts.ownerID;
 }
 
 extend(BPlusTree.prototype, {
@@ -84,7 +86,7 @@ extend(BPlusTree.prototype, {
             ? this.extractor(key)
             : key;
 
-        const result = this.root.insert(cmp, extractedKey, value);
+        const result = this.root.insert(cmp, this.ownerID, extractedKey, value);
 
         if (result === this.root) {
             return this;
@@ -118,7 +120,11 @@ extend(BPlusTree.prototype, {
     },
 
     delete(key) {
-        let newRoot = this.root.delete(this.comparator, key);
+        let newRoot = this.root.delete(
+            this.comparator,
+            this.ownerID,
+            key
+        );
         let rootMerged = false;
         if (this.root !== newRoot) {
             if (newRoot.size < MIN_ROOT_CHILDREN) {
@@ -142,6 +148,31 @@ extend(BPlusTree.prototype, {
             });
         }
         return this;
+    },
+
+    asMutable() {
+        return this.ownerID
+            ? this
+            : new this.constructor({
+                comparator: this.comparator,
+                extractor: this.extractor,
+                root: this.root,
+                height: this.height,
+                size: this.size,
+                ownerID: makeOwnerID(),
+            });
+    },
+
+    asImmutable() {
+        return this.ownerID
+            ? new this.constructor({
+                comparator: this.comparator,
+                extractor: this.extractor,
+                root: this.root,
+                height: this.height,
+                size: this.size,
+            })
+            : this;
     },
 
     _baseBetween(extractor, _fromKey, _toKey) {

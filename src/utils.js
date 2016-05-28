@@ -151,3 +151,12 @@ export function extend(target) {
     }
     return target;
 }
+
+export function makeOwnerID() {
+    return {};
+}
+
+export function tagOwnerID(obj) {
+    obj.ownerID = makeOwnerID();
+    return obj;
+}
