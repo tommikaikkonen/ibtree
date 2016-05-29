@@ -50,19 +50,19 @@ extend(Node.prototype, {
         return this.children.length <= this.maxChildren;
     },
 
-    tail() {
+    tail(ownerID) {
         return new this.constructor({
             order: this.order,
-            keys: tail(this.keys),
-            children: tail(this.children),
+            keys: tail(ownerID, this.keys),
+            children: tail(ownerID, this.children),
         });
     },
 
-    init() {
+    init(ownerID) {
         return new this.constructor({
             order: this.order,
-            keys: init(this.keys),
-            children: init(this.children),
+            keys: init(ownerID, this.keys),
+            children: init(ownerID, this.children),
         });
     },
 
@@ -182,7 +182,7 @@ extend(Leaf.prototype, {
         return this.keys[0];
     },
 
-    stealFirstKeyFrom(rightSibling) {
+    stealFirstKeyFrom(ownerID, rightSibling) {
         const stolenKey = rightSibling.keys[0];
         const stolenValue = rightSibling.children[0];
 
@@ -192,7 +192,7 @@ extend(Leaf.prototype, {
         this.keys = this.keys.concat(stolenKey);
         this.children = this.children.concat(stolenValue);
 
-        const siblingWithoutFirstKey = rightSibling.tail();
+        const siblingWithoutFirstKey = rightSibling.tail(ownerID);
         return [this, siblingWithoutFirstKey];
     },
 
@@ -206,7 +206,7 @@ extend(Leaf.prototype, {
         rightSibling.keys = unshift(ownerID, keyToGive, rightSibling.keys);
         rightSibling.children = unshift(ownerID, valueToGive, rightSibling.children);
 
-        const thisWithoutLastKey = this.init();
+        const thisWithoutLastKey = this.init(ownerID);
         return [thisWithoutLastKey, rightSibling];
     },
 });
@@ -337,7 +337,7 @@ extend(InternalNode.prototype, {
         let newLeftNode;
         let newRightNode;
         if (strategy === STEAL_KEY_FROM_RIGHT) {
-            const newNodes = leftNode.stealFirstKeyFrom(rightNode);
+            const newNodes = leftNode.stealFirstKeyFrom(ownerID, rightNode);
             newLeftNode = newNodes[0];
             newRightNode = newNodes[1];
         } else if (strategy === STEAL_KEY_FROM_LEFT) {
@@ -393,7 +393,7 @@ extend(InternalNode.prototype, {
         return binarySearch.lte(this.keys, key, cmp) + 1;
     },
 
-    stealFirstKeyFrom(rightSibling) {
+    stealFirstKeyFrom(ownerID, rightSibling) {
         // Note that we mutate `this`.
         // Whenever we're stealing a first key,
         // it means this node was created during
@@ -403,17 +403,16 @@ extend(InternalNode.prototype, {
         this.keys = this.keys.concat(rightSibling.smallestKey());
         this.children = this.children.concat(stolenValue);
 
-        return [this, rightSibling.tail()];
+        return [this, rightSibling.tail(ownerID)];
     },
 
     giveLastKeyTo(ownerID, rightSibling) {
         // Steal last key-value pair from left node
-        // const stolenKey = last(leftNode.keys);
         const stolenValue = last(this.children);
         rightSibling.keys = unshift(ownerID, rightSibling.smallestKey(), rightSibling.keys);
         rightSibling.children = unshift(ownerID, stolenValue, rightSibling.children);
 
-        return [this.init(), rightSibling];
+        return [this.init(ownerID), rightSibling];
     },
 
     withReplacedChildren(idx, newChildren) {

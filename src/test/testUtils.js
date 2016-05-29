@@ -2,7 +2,7 @@ import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import flatten from 'ramda/src/flatten';
 import {
-    fastArraySlice,
+    slice,
     withoutIdx,
     splitAt,
     insert,
@@ -32,9 +32,17 @@ describe('Utils', () => {
         expect(flatten(chunks).length).to.equal(size);
     });
 
-    it('fastArraySlice', () => {
+    it('slice', () => {
         const arr = [0, 1, 2, 3, 4];
-        const result = fastArraySlice(1, 3, arr);
+        const result = slice(null, 1, 3, arr);
+        expect(result).to.deep.equal([1, 2]);
+    });
+
+    it('slice with mutations', () => {
+        const ownerID = makeOwnerID();
+        const arr = tagOwnerID([0, 1, 2, 3, 4], ownerID);
+        const result = slice(ownerID, 1, 3, arr);
+        expect(result).to.equal(arr);
         expect(result).to.deep.equal([1, 2]);
     });
 

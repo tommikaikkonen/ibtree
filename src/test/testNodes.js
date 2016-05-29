@@ -246,7 +246,7 @@ describe('Leaf', () => {
             });
 
             it('stealFirstKeyFrom', () => {
-                const [newLeft, newRight] = left.stealFirstKeyFrom(right);
+                const [newLeft, newRight] = left.stealFirstKeyFrom(null, right);
 
                 // This operation mutates `left`.
 
@@ -547,7 +547,7 @@ describe('InternalNode', () => {
             });
 
             it('stealFirstKeyFrom', () => {
-                const [newLeft, newRight] = left.stealFirstKeyFrom(right);
+                const [newLeft, newRight] = left.stealFirstKeyFrom(null, right);
 
                 // this operation mutates `left`.
                 expect(newLeft).to.equal(left);

@@ -16,8 +16,27 @@ export function tagOwnerID(obj, ownerID) {
     return obj;
 }
 
-export function fastArraySlice(start, end, arr) {
-    const newArr = new Array(end - start);
+function allocateArray(ownerID, len) {
+    return tagOwnerID(len ? new Array(len) : [], ownerID);
+}
+
+export function slice(ownerID, start, end, arr) {
+    const newLen = end - start;
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    if (canMutate) {
+        let removeNFromStart = start;
+        let removeNFromEnd = arr.length - end;
+        while (removeNFromStart--) {
+            arr.shift();
+        }
+        while (removeNFromEnd--) {
+            arr.pop();
+        }
+
+        return arr;
+    }
+
+    const newArr = allocateArray(ownerID, newLen);
     for (let i = start; i < end; i++) {
         newArr[i - start] = arr[i];
     }
@@ -112,8 +131,8 @@ export function unshift(ownerID, value, arr) {
 export const takeIdxAndSplit = (idx, arr) => {
     const cutoff = idx;
     const a1len = cutoff;
-    const arr1 = fastArraySlice(0, a1len, arr);
-    const arr2 = fastArraySlice(cutoff + 1, arr.length, arr);
+    const arr1 = slice(null, 0, a1len, arr);
+    const arr2 = slice(null, cutoff + 1, arr.length, arr);
     return [arr1, arr[cutoff], arr2];
 };
 
@@ -121,14 +140,27 @@ export function last(arr) {
     return arr[arr.length - 1];
 }
 
-export function init(arr) {
-    if (arr.length <= 1) return [];
-    return fastArraySlice(0, arr.length - 1, arr);
+export function init(ownerID, arr) {
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    if (canMutate) {
+        if (arr.length === 0) return arr;
+        arr.pop();
+        return arr;
+    }
+
+    if (arr.length <= 1) return allocateArray(ownerID);
+    return slice(ownerID, 0, arr.length - 1, arr);
 }
 
-export function tail(arr) {
-    if (arr.length <= 1) return [];
-    return fastArraySlice(1, arr.length, arr);
+export function tail(ownerID, arr) {
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    if (canMutate) {
+        arr.shift();
+        return arr;
+    }
+
+    if (arr.length <= 1) return tagOwnerID([], ownerID);
+    return slice(ownerID, 1, arr.length, arr);
 }
 
 export function getEmptyIterator() {
