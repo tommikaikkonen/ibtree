@@ -53,8 +53,10 @@ function assertTreeOrder(order, tree) {
     });
 }
 
-const testSizes = range(0, 500);
-const loops = range(0, 10);
+// const testSizes = range(0, 500);
+// const loops = range(0, 10);
+const testSizes = range(1, 2);
+const loops = range(0, 1);
 
 loops.forEach(() => {
     if (!testSizes.length) return;
@@ -163,7 +165,7 @@ loops.forEach(() => {
                         expect(Array.from(tree.between(0, 10)).length).to.equal(0);
                     } else {
                         let end = testSize - 2;
-                        const start = 1;
+                        const start = 0;
                         if (end < start) {
                             end = start;
                         }
@@ -229,7 +231,7 @@ loops.forEach(() => {
                         expect(Array.from(tree.between(10, 0)).length).to.equal(0);
                     } else {
                         let end = testSize - 2;
-                        const start = 1;
+                        const start = 0;
                         if (end < start) {
                             end = start;
                         }

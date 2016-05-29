@@ -5,11 +5,12 @@ import {
     fastArraySlice,
     withoutIdx,
     splitAt,
-    fastInsert,
+    insert,
     fastMap,
     unshift,
     takeIdxAndSplit,
     boundedChunk,
+    tagOwnerID,
 } from '../utils';
 
 chai.use(sinonChai);
@@ -41,9 +42,18 @@ describe('Utils', () => {
         expect(result).to.deep.equal(['0', '1', '2', '3']);
     });
 
-    it('fastInsert', () => {
+    it('insert', () => {
         const arr = [0, 1, 3, 4];
-        const result = fastInsert(2, 2, arr);
+        const result = insert(null, 2, 2, arr);
+        expect(result).to.deep.equal([0, 1, 2, 3, 4]);
+    });
+
+    it('insert with mutations', () => {
+        const id = {};
+        const arr = [0, 1, 3, 4];
+        tagOwnerID(arr, id);
+        const result = insert(id, 2, 2, arr);
+        expect(result).to.equal(arr);
         expect(result).to.deep.equal([0, 1, 2, 3, 4]);
     });
 
@@ -61,7 +71,15 @@ describe('Utils', () => {
 
     it('unshift', () => {
         const arr = [1, 2, 3];
-        const result = unshift(0, arr);
+        const result = unshift(null, 0, arr);
+        expect(result).to.deep.equal([0, 1, 2, 3]);
+    });
+
+    it('unshift with mutations', () => {
+        const id = {};
+        const arr = tagOwnerID([1, 2, 3], id);
+        const result = unshift(id, 0, arr);
+        expect(result).to.equal(arr);
         expect(result).to.deep.equal([0, 1, 2, 3]);
     });
 

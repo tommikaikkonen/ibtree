@@ -8,7 +8,7 @@ import {
 } from './constants';
 import {
     takeIdxAndSplit,
-    fastInsert,
+    insert,
     fastSet,
     fastArrayClone,
     unshift,
@@ -128,8 +128,8 @@ extend(Leaf.prototype, {
         let newChildren;
 
         if (!alreadyHasKey) {
-            newKeys = fastInsert(idx, key, this.keys);
-            newChildren = fastInsert(idx, value, this.children);
+            newKeys = insert(ownerID, idx, key, this.keys);
+            newChildren = insert(ownerID, idx, value, this.children);
         } else {
             const existingValue = this.children[idx];
             if (existingValue === value) {
@@ -196,15 +196,15 @@ extend(Leaf.prototype, {
         return [this, siblingWithoutFirstKey];
     },
 
-    giveLastKeyTo(rightSibling) {
+    giveLastKeyTo(ownerID, rightSibling) {
         const keyToGive = this.keys[this.keys.length - 1];
         const valueToGive = this.children[this.children.length - 1];
 
         // Note: mutative. If we're giving a key,
         // it means the sibling node was created during
         // the edit and can be mutated.
-        rightSibling.keys = unshift(keyToGive, rightSibling.keys);
-        rightSibling.children = unshift(valueToGive, rightSibling.children);
+        rightSibling.keys = unshift(ownerID, keyToGive, rightSibling.keys);
+        rightSibling.children = unshift(ownerID, valueToGive, rightSibling.children);
 
         const thisWithoutLastKey = this.init();
         return [thisWithoutLastKey, rightSibling];
@@ -240,7 +240,7 @@ extend(InternalNode.prototype, {
         // In a node, ac - ak === 1 (one less key than children).
         // Because (ac + bc) - (ak + bk) === 2, we need to add a key.
         // The key is the smallest key on the right node subtree.
-        const toConcat = unshift(otherNode.smallestKey(), otherNode.keys);
+        const toConcat = unshift(null, otherNode.smallestKey(), otherNode.keys);
         const newNode = new InternalNode({
             order: this.order,
             keys: this.keys.concat(toConcat),
@@ -341,7 +341,7 @@ extend(InternalNode.prototype, {
             newLeftNode = newNodes[0];
             newRightNode = newNodes[1];
         } else if (strategy === STEAL_KEY_FROM_LEFT) {
-            const newNodes = leftNode.giveLastKeyTo(rightNode);
+            const newNodes = leftNode.giveLastKeyTo(ownerID, rightNode);
             newLeftNode = newNodes[0];
             newRightNode = newNodes[1];
         }
@@ -401,12 +401,12 @@ extend(InternalNode.prototype, {
         return [this, rightSibling.tail()];
     },
 
-    giveLastKeyTo(rightSibling) {
+    giveLastKeyTo(ownerID, rightSibling) {
         // Steal last key-value pair from left node
         // const stolenKey = last(leftNode.keys);
         const stolenValue = last(this.children);
-        rightSibling.keys = unshift(rightSibling.smallestKey(), rightSibling.keys);
-        rightSibling.children = unshift(stolenValue, rightSibling.children);
+        rightSibling.keys = unshift(ownerID, rightSibling.smallestKey(), rightSibling.keys);
+        rightSibling.children = unshift(ownerID, stolenValue, rightSibling.children);
 
         return [this.init(), rightSibling];
     },
@@ -460,9 +460,9 @@ extend(InternalNode.prototype, {
 
     withSplitChild(cmp, newKey, splitChild, newChild) {
         const insertNewKeyAt = internalInsertKeyAt(cmp, newKey, this.keys);
-        const newKeys = fastInsert(insertNewKeyAt, newKey, this.keys);
+        const newKeys = insert(null, insertNewKeyAt, newKey, this.keys);
 
-        const newChildren = fastInsert(insertNewKeyAt + 1, newChild, this.children);
+        const newChildren = insert(null, insertNewKeyAt + 1, newChild, this.children);
         // Replace the original child with the split one.
         newChildren[insertNewKeyAt] = splitChild;
 

@@ -28,7 +28,13 @@ export function withoutIdx(idx, arr) {
     return copied;
 }
 
-export function fastInsert(idx, val, arr) {
+export function insert(ownerID, idx, val, arr) {
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    if (canMutate) {
+        arr.splice(idx, 0, val);
+        return arr;
+    }
+
     const newArrLen = arr.length + 1;
     const newArr = new Array(newArrLen);
 
@@ -79,8 +85,8 @@ export function splitAt(idx, arr) {
     return [firstArr, secondArr];
 }
 
-export function unshift(value, arr) {
-    return fastInsert(0, value, arr);
+export function unshift(ownerID, value, arr) {
+    return insert(ownerID, 0, value, arr);
 }
 
 export const takeIdxAndSplit = (idx, arr) => {
@@ -156,7 +162,10 @@ export function makeOwnerID() {
     return {};
 }
 
-export function tagOwnerID(obj) {
-    obj.ownerID = makeOwnerID();
+export function tagOwnerID(obj, ownerID) {
+    Object.defineProperty(obj, 'ownerID', {
+        value: ownerID || makeOwnerID(),
+        enumerable: false,
+    });
     return obj;
 }

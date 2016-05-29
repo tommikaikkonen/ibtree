@@ -330,7 +330,6 @@ extend(BPlusTree.prototype, {
         // the leaf instead of looking up the successor
         // path each time.
         let leafCacheRef;
-
         let done = false;
         const iterator = {
             next: () => {

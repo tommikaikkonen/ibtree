@@ -260,7 +260,7 @@ describe('Leaf', () => {
             });
 
             it('giveLastKeyTo', () => {
-                const [newLeft, newRight] = left.giveLastKeyTo(right);
+                const [newLeft, newRight] = left.giveLastKeyTo(null, right);
 
                 // This operation mutates `right`.
 
@@ -564,7 +564,7 @@ describe('InternalNode', () => {
             it('giveLastKeyTo', () => {
                 const initialRightChildren = right.children;
                 const initialLeftChildren = left.children;
-                const [newLeft, newRight] = left.giveLastKeyTo(right);
+                const [newLeft, newRight] = left.giveLastKeyTo(null, right);
 
                 // This operation mutatest `right`.
                 expect(newRight).to.equal(right);
