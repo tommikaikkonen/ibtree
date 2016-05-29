@@ -6,11 +6,13 @@ import {
     withoutIdx,
     splitAt,
     insert,
+    set,
     fastMap,
     unshift,
     takeIdxAndSplit,
     boundedChunk,
     tagOwnerID,
+    makeOwnerID,
 } from '../utils';
 
 chai.use(sinonChai);
@@ -59,7 +61,15 @@ describe('Utils', () => {
 
     it('withoutIdx', () => {
         const arr = [0, 1, 1, 2, 3];
-        const result = withoutIdx(2, arr);
+        const result = withoutIdx(null, 2, arr);
+        expect(result).to.deep.equal([0, 1, 2, 3]);
+    });
+
+    it('withoutIdx with mutations', () => {
+        const ownerID = makeOwnerID();
+        const arr = tagOwnerID([0, 1, 1, 2, 3], ownerID);
+        const result = withoutIdx(ownerID, 2, arr);
+        expect(result).to.equal(arr);
         expect(result).to.deep.equal([0, 1, 2, 3]);
     });
 
@@ -87,5 +97,20 @@ describe('Utils', () => {
         const arr = [1, 2, 3, 4, 5];
         const result = takeIdxAndSplit(2, arr);
         expect(result).to.deep.equal([[1, 2], 3, [4, 5]]);
+    });
+
+    it('set', () => {
+        const arr = [1, 999, 3];
+        const result = set(null, 1, 2, arr);
+        expect(result).not.to.equal(arr);
+        expect(result).to.deep.equal([1, 2, 3]);
+    });
+
+    it('set with mutations', () => {
+        const ownerID = makeOwnerID();
+        const arr = tagOwnerID([1, 999, 3], ownerID);
+        const result = set(ownerID, 1, 2, arr);
+        expect(result).to.equal(arr);
+        expect(result).to.deep.equal([1, 2, 3]);
     });
 });

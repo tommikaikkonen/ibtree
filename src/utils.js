@@ -4,6 +4,18 @@ import {
 
 export const median = len => Math.ceil(len / 2);
 
+export function makeOwnerID() {
+    return {};
+}
+
+export function tagOwnerID(obj, ownerID) {
+    Object.defineProperty(obj, 'ownerID', {
+        value: ownerID || makeOwnerID(),
+        enumerable: false,
+    });
+    return obj;
+}
+
 export function fastArraySlice(start, end, arr) {
     const newArr = new Array(end - start);
     for (let i = start; i < end; i++) {
@@ -12,7 +24,7 @@ export function fastArraySlice(start, end, arr) {
     return newArr;
 }
 
-export function fastArrayClone(arr) {
+export function arrayClone(arr) {
     const len = arr.length;
     const copy = new Array(len);
 
@@ -22,8 +34,12 @@ export function fastArrayClone(arr) {
     return copy;
 }
 
-export function withoutIdx(idx, arr) {
-    const copied = fastArrayClone(arr);
+export function withoutIdx(ownerID, idx, arr) {
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    const copied = canMutate
+        ? arr
+        : tagOwnerID(arrayClone(arr));
+
     copied.splice(idx, 1);
     return copied;
 }
@@ -52,14 +68,18 @@ export function insert(ownerID, idx, val, arr) {
     return newArr;
 }
 
-export function fastSet(idx, val, arr) {
-    const copied = fastArrayClone(arr);
+export function set(ownerID, idx, val, arr) {
+    const canMutate = ownerID && arr.ownerID === ownerID;
+    const copied = canMutate
+        ? arr
+        : tagOwnerID(arrayClone(arr), ownerID);
+
     copied[idx] = val;
     return copied;
 }
 
 export function fastMap(fn, arr) {
-    const copied = fastArrayClone(arr);
+    const copied = arrayClone(arr);
     const len = arr.length;
     for (let i = 0; i < len; i++) {
         copied[i] = fn(arr[i], i);
@@ -156,16 +176,4 @@ export function extend(target) {
         }
     }
     return target;
-}
-
-export function makeOwnerID() {
-    return {};
-}
-
-export function tagOwnerID(obj, ownerID) {
-    Object.defineProperty(obj, 'ownerID', {
-        value: ownerID || makeOwnerID(),
-        enumerable: false,
-    });
-    return obj;
 }

@@ -509,7 +509,7 @@ describe('InternalNode', () => {
 
                 // Usually you would supply a new left or right
                 // node but for this test it doesn't matter.
-                const newParent = parentNode.withMergedChildren(1, left, right);
+                const newParent = parentNode.withMergedChildren(null, 1, left, right);
 
                 expect(mergeSpy).to.have.been.calledOnce;
                 const call = mergeSpy.firstCall;
@@ -533,7 +533,7 @@ describe('InternalNode', () => {
 
                 // Usually you would supply a new left or right
                 // node but for this test it doesn't matter.
-                const newParent = parentNode.withMergedChildren(0, left, right);
+                const newParent = parentNode.withMergedChildren(null, 0, left, right);
 
                 expect(mergeSpy).to.have.been.calledOnce;
                 const call = mergeSpy.firstCall;

@@ -9,8 +9,8 @@ import {
 import {
     takeIdxAndSplit,
     insert,
-    fastSet,
-    fastArrayClone,
+    set,
+    arrayClone,
     unshift,
     splitAt,
     withoutIdx,
@@ -92,8 +92,8 @@ extend(Leaf.prototype, {
 
         const newLeaf = new Leaf({
             order: this.order,
-            keys: withoutIdx(idx, this.keys),
-            children: withoutIdx(idx, this.children),
+            keys: withoutIdx(ownerID, idx, this.keys),
+            children: withoutIdx(ownerID, idx, this.children),
         });
 
         return newLeaf;
@@ -136,8 +136,8 @@ extend(Leaf.prototype, {
                 return this;
             }
 
-            newKeys = fastSet(idx, key, this.keys);
-            newChildren = fastSet(idx, value, this.children);
+            newKeys = set(ownerID, idx, key, this.keys);
+            newChildren = set(ownerID, idx, value, this.children);
         }
 
         const newLeaf = new Leaf({
@@ -331,7 +331,7 @@ extend(InternalNode.prototype, {
         } = strategyInfo;
 
         if (strategy === MERGE) {
-            return this.withMergedChildren(leftNodeIdx, leftNode, rightNode);
+            return this.withMergedChildren(ownerID, leftNodeIdx, leftNode, rightNode);
         }
 
         let newLeftNode;
@@ -355,16 +355,21 @@ extend(InternalNode.prototype, {
         const keyIdxToReplace = leftNodeIdx;
         const newKey = newRightNode.smallestKey();
 
-        withReplacedChildren.keys = fastSet(keyIdxToReplace, newKey, withReplacedChildren.keys);
+        withReplacedChildren.keys = set(
+            ownerID,
+            keyIdxToReplace,
+            newKey,
+            withReplacedChildren.keys
+        );
         return withReplacedChildren;
     },
 
-    withMergedChildren(leftChildIdx, leftNode, rightNode) {
+    withMergedChildren(ownerID, leftChildIdx, leftNode, rightNode) {
         const mergedChild = leftNode.merge(rightNode);
 
         const keyIdxToPop = leftChildIdx;
 
-        const newKeys = withoutIdx(keyIdxToPop, this.keys);
+        const newKeys = withoutIdx(ownerID, keyIdxToPop, this.keys);
 
         const areLeftmostNodes = leftChildIdx === 0;
 
@@ -372,7 +377,7 @@ extend(InternalNode.prototype, {
             newKeys[leftChildIdx - 1] = mergedChild.smallestKey();
         }
 
-        const newChildren = fastArrayClone(this.children);
+        const newChildren = arrayClone(this.children);
         newChildren.splice(leftChildIdx, 1);
         newChildren[leftChildIdx] = mergedChild;
 
@@ -412,7 +417,7 @@ extend(InternalNode.prototype, {
     },
 
     withReplacedChildren(idx, newChildren) {
-        const replaced = fastArrayClone(this.children);
+        const replaced = arrayClone(this.children);
         for (let i = 0; i < newChildren.length; i++) {
             replaced[idx + i] = newChildren[i];
         }
