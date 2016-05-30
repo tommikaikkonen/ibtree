@@ -20,6 +20,9 @@ import {
     median,
     extend,
     tagOwnerID,
+    setRef,
+    isSet,
+    canMutate,
 } from './utils';
 
 const binSearch = binarySearch.eq;
@@ -55,6 +58,7 @@ extend(Node.prototype, {
             order: this.order,
             keys: tail(ownerID, this.keys),
             children: tail(ownerID, this.children),
+            ownerID,
         });
     },
 
@@ -63,6 +67,7 @@ extend(Node.prototype, {
             order: this.order,
             keys: init(ownerID, this.keys),
             children: init(ownerID, this.children),
+            ownerID,
         });
     },
 
@@ -83,18 +88,30 @@ extend(Leaf.prototype, {
 
     minChildren: LEAF_MIN_CHILDREN,
 
-    delete(cmp, ownerID, key) {
+    delete(cmp, ownerID, didChange, key) {
         const idx = binSearch(this.keys, key, cmp);
         // Key was not found. No modifications needed.
         if (idx === -1) {
             return this;
         }
 
-        const newLeaf = new Leaf({
-            order: this.order,
-            keys: withoutIdx(ownerID, idx, this.keys),
-            children: withoutIdx(ownerID, idx, this.children),
-        });
+        setRef(didChange);
+
+        let newLeaf;
+        const newKeys = withoutIdx(ownerID, idx, this.keys);
+        const newChildren = withoutIdx(ownerID, idx, this.children);
+        if (canMutate(this, ownerID)) {
+            newLeaf = this;
+            newLeaf.keys = newKeys;
+            newLeaf.children = newChildren;
+        } else {
+            newLeaf = new Leaf({
+                order: this.order,
+                keys: withoutIdx(ownerID, idx, this.keys),
+                children: withoutIdx(ownerID, idx, this.children),
+                ownerID,
+            });
+        }
 
         return newLeaf;
     },
@@ -120,7 +137,7 @@ extend(Leaf.prototype, {
         return binarySearch.gte(this.keys, key, cmp);
     },
 
-    insert(cmp, ownerID, key, value) {
+    insert(cmp, ownerID, didChange, key, value) {
         const idx = this.idxForKey(cmp, key);
         const alreadyHasKey = this.keys[idx] === key;
 
@@ -140,26 +157,36 @@ extend(Leaf.prototype, {
             newChildren = set(ownerID, idx, value, this.children);
         }
 
-        const newLeaf = new Leaf({
-            order: this.order,
-            keys: newKeys,
-            children: newChildren,
-        });
+        setRef(didChange);
+
+        let newLeaf;
+        if (canMutate(this, ownerID)) {
+            newLeaf = this;
+            this.keys = newKeys;
+            this.children = newChildren;
+        } else {
+            newLeaf = new Leaf({
+                order: this.order,
+                keys: newKeys,
+                children: newChildren,
+                ownerID,
+            });
+        }
 
         return newLeaf.shouldSplit()
-            ? newLeaf.split()
+            ? newLeaf.split(ownerID)
             : newLeaf;
     },
 
-    split() {
+    split(ownerID) {
         const cutoff = median(this.keys.length);
         const smallestKeyInOther = this.keys[cutoff];
 
-        const keypair = splitAt(cutoff, this.keys);
+        const keypair = splitAt(ownerID, cutoff, this.keys);
         const thisKeys = keypair[0];
         const otherKeys = keypair[1];
 
-        const childrenPair = splitAt(cutoff, this.children);
+        const childrenPair = splitAt(ownerID, cutoff, this.children);
         const thisChildren = childrenPair[0];
         const otherChildren = childrenPair[1];
 
@@ -167,13 +194,22 @@ extend(Leaf.prototype, {
             order: this.order,
             keys: otherKeys,
             children: otherChildren,
+            ownerID,
         });
 
-        const thisSplit = new Leaf({
-            order: this.order,
-            keys: thisKeys,
-            children: thisChildren,
-        });
+        let thisSplit;
+        if (canMutate(this, ownerID)) {
+            thisSplit = this;
+            thisSplit.keys = thisKeys;
+            thisSplit.children = thisChildren;
+        } else {
+            thisSplit = new Leaf({
+                order: this.order,
+                keys: thisKeys,
+                children: thisChildren,
+                ownerID,
+            });
+        }
 
         return [smallestKeyInOther, thisSplit, other];
     },
@@ -310,18 +346,18 @@ extend(InternalNode.prototype, {
         }
     },
 
-    delete(cmp, ownerID, key) {
+    delete(cmp, ownerID, didChange, key) {
         const childIdx = this.childIdxForKey(cmp, key);
         const origChild = this.children[childIdx];
-        const child = origChild.delete(cmp, ownerID, key);
+        const child = origChild.delete(cmp, ownerID, didChange, key);
 
-        if (origChild === child) return this;
+        if (!isSet(didChange)) return this;
 
         const strategyInfo = this.chooseComplexDeletionStrategy(childIdx, child);
         const strategy = strategyInfo.strategy;
 
         if (strategy === REPLACE) {
-            return this.withReplacedChildren(childIdx, [child]);
+            return this.withReplacedChildren(ownerID, childIdx, [child]);
         }
 
         const {
@@ -347,6 +383,7 @@ extend(InternalNode.prototype, {
         }
 
         const withReplacedChildren = this.withReplacedChildren(
+            ownerID,
             leftNodeIdx,
             [newLeftNode, newRightNode]
         );
@@ -385,6 +422,7 @@ extend(InternalNode.prototype, {
             order: this.order,
             keys: newKeys,
             children: newChildren,
+            ownerID,
         });
         return withReplacedChild;
     },
@@ -415,15 +453,20 @@ extend(InternalNode.prototype, {
         return [this.init(ownerID), rightSibling];
     },
 
-    withReplacedChildren(idx, newChildren) {
-        const replaced = arrayClone(this.children);
+    withReplacedChildren(ownerID, idx, newChildren) {
+        const replaced = canMutate(this.children, ownerID)
+            ? this.children
+            : arrayClone(this.children);
+
         for (let i = 0; i < newChildren.length; i++) {
             replaced[idx + i] = newChildren[i];
         }
+
         return new InternalNode({
             order: this.order,
             keys: this.keys,
             children: replaced,
+            ownerID,
         });
     },
 
@@ -435,55 +478,71 @@ extend(InternalNode.prototype, {
         return curr.keys[0];
     },
 
-    split() {
+    split(ownerID) {
         const medianIdx = median(this.keys.length) - 1;
 
-        const splitArr = takeIdxAndSplit(medianIdx, this.keys);
+        const splitArr = takeIdxAndSplit(ownerID, medianIdx, this.keys);
         const thisKeys = splitArr[0];
         const medianKey = splitArr[1];
         const otherKeys = splitArr[2];
 
-        const childrenPair = splitAt(medianIdx + 1, this.children);
+        const childrenPair = splitAt(ownerID, medianIdx + 1, this.children);
         const thisChildren = childrenPair[0];
         const otherChildren = childrenPair[1];
 
-        const thisNode = new InternalNode({
-            order: this.order,
-            keys: thisKeys,
-            children: thisChildren,
-        });
+        let thisNode;
+        if (canMutate(this, ownerID)) {
+            thisNode = this;
+            thisNode.keys = thisKeys;
+            thisNode.children = thisChildren;
+        } else {
+            thisNode = new InternalNode({
+                order: this.order,
+                keys: thisKeys,
+                children: thisChildren,
+                ownerID,
+            });
+        }
 
         const otherNode = new InternalNode({
             order: this.order,
             keys: otherKeys,
             children: otherChildren,
+            ownerID,
         });
 
         return [medianKey, thisNode, otherNode];
     },
 
-    withSplitChild(cmp, newKey, splitChild, newChild) {
+    withSplitChild(cmp, ownerID, newKey, splitChild, newChild) {
         const insertNewKeyAt = internalInsertKeyAt(cmp, newKey, this.keys);
-        const newKeys = insert(null, insertNewKeyAt, newKey, this.keys);
+        const newKeys = insert(ownerID, insertNewKeyAt, newKey, this.keys);
 
-        const newChildren = insert(null, insertNewKeyAt + 1, newChild, this.children);
+        const newChildren = insert(ownerID, insertNewKeyAt + 1, newChild, this.children);
         // Replace the original child with the split one.
         newChildren[insertNewKeyAt] = splitChild;
+
+        if (canMutate(this, ownerID)) {
+            this.keys = newKeys;
+            this.children = newChildren;
+            return this;
+        }
 
         return new InternalNode({
             order: this.order,
             keys: newKeys,
             children: newChildren,
+            ownerID,
         });
     },
 
-    insert(cmp, ownerID, key, value) {
+    insert(cmp, ownerID, didChange, key, value) {
         const childIdx = this.childIdxForKey(cmp, key);
         const child = this.children[childIdx];
 
-        const newChild = child.insert(cmp, ownerID, key, value);
+        const newChild = child.insert(cmp, ownerID, didChange, key, value);
 
-        if (child === newChild) return this;
+        if (!isSet(didChange)) return this;
 
         // Got new child.
 
@@ -494,13 +553,14 @@ extend(InternalNode.prototype, {
             const splitChild = splitArr[1];
             const _newChild = splitArr[2];
 
-            const withSplitChild = this.withSplitChild(cmp, medianKey, splitChild, _newChild);
+            const withSplitChild = this.withSplitChild(
+                cmp, ownerID, medianKey, splitChild, _newChild);
             return withSplitChild.shouldSplit()
-                ? withSplitChild.split()
+                ? withSplitChild.split(ownerID)
                 : withSplitChild;
         }
 
-        return this.withReplacedChildren(childIdx, [newChild]);
+        return this.withReplacedChildren(ownerID, childIdx, [newChild]);
     },
 });
 

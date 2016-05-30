@@ -5,7 +5,6 @@ import {
     BTMap,
     BTSet,
     defaultComparator,
-    makeComparator,
 } from '../index';
 import {
     Leaf,
@@ -16,8 +15,10 @@ import {
 } from '../path';
 import {
     ORDER,
-    MIN_ROOT_CHILDREN,
 } from '../constants';
+import {
+    setRef,
+} from '../utils';
 
 chai.use(sinonChai);
 const { expect } = chai;
@@ -106,14 +107,28 @@ describe('BTree', () => {
         });
 
         it('set with root splitting', () => {
-            const insertStub = sinon.stub(tree.root, 'insert');
             const risingKey = 'key';
             const leftChild = {};
             const rightChild = {};
-            insertStub.returns([risingKey, leftChild, rightChild]);
+
+            function mockInsert(cmp, ownerID, didChange, key, value) {
+                setRef(didChange);
+                return [risingKey, leftChild, rightChild];
+            }
+
+            const insertStub = sinon.stub(tree.root, 'insert', mockInsert);
 
             const withFour = tree.set(4, 4);
-            expect(insertStub).to.have.been.calledWith(tree.comparator, tree.ownerID, 4, 4);
+            const insertCall = insertStub.firstCall;
+
+            expect(insertCall.args[0]).to.equal(tree.comparator);
+            expect(insertCall.args[1]).to.equal(tree.ownerID);
+
+            // Third argument is a didChange ref, private to the routine
+            expect(insertCall.args[2]).to.be.an('object');
+            expect(insertCall.args[3]).to.equal(4);
+            expect(insertCall.args[4]).to.equal(4);
+
             expect(withFour.height).to.equal(tree.height + 1);
             expect(withFour.size).to.equal(tree.size + 1);
 
@@ -150,8 +165,14 @@ describe('BTree', () => {
             const deleteSpy = sinon.spy(tree.root, 'delete');
 
             const withoutTwo = tree.delete(2);
+            const deleteCall = deleteSpy.firstCall;
+            expect(deleteCall.args[0]).to.equal(tree.comparator);
+            expect(deleteCall.args[1]).to.equal(tree.ownerID);
 
-            expect(deleteSpy).to.have.been.calledWith(tree.comparator, tree.ownerID, 2);
+            // This is a didChange ref object created within the routine
+            expect(deleteCall.args[2]).to.be.an('object');
+            expect(deleteCall.args[3]).to.equal(2);
+
             expect(withoutTwo).to.not.equal(tree);
             expect(withoutTwo.size).to.equal(tree.size - 1);
             expect(withoutTwo.height).to.equal(tree.height);
@@ -160,9 +181,16 @@ describe('BTree', () => {
         it('delete to empty tree', () => {
             tree = BTMap.from([[1, 1]]);
             const deleteSpy = sinon.spy(tree.root, 'delete');
-
             const empty = tree.delete(1);
-            expect(deleteSpy).to.have.been.calledWith(tree.comparator, tree.ownerID, 1);
+
+            const deleteCall = deleteSpy.firstCall;
+
+            expect(deleteCall.args[0]).to.equal(tree.comparator);
+            expect(deleteCall.args[1]).to.equal(tree.ownerID);
+
+            // Internally created didChange ref object within the routine
+            expect(deleteCall.args[2]).to.be.an('object');
+            expect(deleteCall.args[3]).to.equal(1);
 
             expect(empty.size).to.equal(0);
             expect(empty.height).to.equal(tree.height);

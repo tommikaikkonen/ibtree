@@ -105,6 +105,14 @@ TreeAdapter.prototype = {
         return this.val.between(fromKey, toKey);
     },
 
+    asMutable() {
+        return new TreeAdapter(this.val.asMutable());
+    },
+
+    asImmutable() {
+        return new TreeAdapter(this.val.asImmutable());
+    },
+
     set(key, val) {
         const copied = this.copy();
         return new TreeAdapter(copied.set(key, val));
@@ -145,6 +153,14 @@ ImmutableAdapter.prototype = {
         return new ImmutableAdapter(copied.set(key, val));
     },
 
+    asMutable() {
+        return new ImmutableAdapter(this.val.asMutable());
+    },
+
+    asImmutable() {
+        return new ImmutableAdapter(this.val.asImmutable());
+    },
+
     copy() {
         return this.val;
     },
@@ -163,7 +179,7 @@ module.exports = {
     adapters: {
         // Object: ObjectAdapter,
         // Map: MapAdapter,
-        BPlusTree: TreeAdapter,
-        ImmutableMap: ImmutableAdapter,
+        ibtree: TreeAdapter,
+        'Immutable.Map': ImmutableAdapter,
     },
 };

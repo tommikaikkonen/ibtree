@@ -4,14 +4,18 @@ const adapters = require('./utils').adapters;
 
 const benchmarks = {};
 module.exports = {
-    name: 'Bulkload N entries from empty (transient)',
-    description: 'Cost to bulkload N entries into a map with mutations',
+    name: 'Add N entries to a non-empty structure (transient)',
+    description: 'Cost to add N entries into a map with transient mutations',
     sizes: [100],
     benchmarks,
 };
 
 mapObjIndexed((adapter, name) => {
     benchmarks[name] = keys => () => {
-        adapter.fromTransient(keys);
+        let obj = adapter.new().asMutable();
+        for (let i = 0, len = keys.length; i < len; i++) {
+            obj = obj.set(keys[i], i);
+        }
+        obj.asImmutable();
     };
 }, adapters);

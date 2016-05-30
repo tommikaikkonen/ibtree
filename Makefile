@@ -8,6 +8,7 @@ clean:
 
 build: clean
 	$(BIN)/babel src --out-dir lib
+	webpack --optimize-minimize
 
 test: lint
 	NODE_ENV=test $(BIN)/mocha $(MOCHA_ARGS) $(MOCHA_TARGET) --prof

@@ -8,6 +8,9 @@ import {
     boundedChunk,
     extend,
     makeOwnerID,
+    tagOwnerID,
+    makeRef,
+    isSet,
 } from './utils';
 import {
     ORDER,
@@ -86,14 +89,15 @@ extend(BPlusTree.prototype, {
             ? this.extractor(key)
             : key;
 
-        const result = this.root.insert(cmp, this.ownerID, extractedKey, value);
+        const didChange = makeRef(false);
+        const result = this.root.insert(cmp, this.ownerID, didChange, extractedKey, value);
 
-        if (result === this.root) {
-            return this;
-        }
+        if (!isSet(didChange)) return this;
 
         let newRoot;
         let rootSplit = false;
+        const canMutate = !!this.ownerID;
+
         // Root was split
         if (result.length === 3) {
             rootSplit = true;
@@ -101,53 +105,85 @@ extend(BPlusTree.prototype, {
             const medianKey = splitArr[0];
             const splitChild = splitArr[1];
             const newChild = splitArr[2];
+
+            const newRootKeys = tagOwnerID([medianKey], this.ownerID);
+            const newRootChildren = tagOwnerID([splitChild, newChild], this.ownerID);
+
             newRoot = new InternalNode({
                 order: this.order,
-                keys: [medianKey],
-                children: [splitChild, newChild],
+                keys: newRootKeys,
+                children: newRootChildren,
             });
         } else {
             newRoot = result;
+        }
+
+        const newHeight = rootSplit ? this.height + 1 : this.height;
+        const newSize = this.size + 1;
+
+        if (canMutate) {
+            this.height = newHeight;
+            this.size = newSize;
+            this.root = newRoot;
+            this._didAlter = true;
+            return this;
         }
 
         return new this.constructor({
             extractor: this.extractor,
             comparator: this.comparator,
             root: newRoot,
-            height: rootSplit ? this.height + 1 : this.height,
-            size: this.size + 1,
+            height: newHeight,
+            size: newSize,
         });
     },
 
     delete(key) {
+        const didChange = makeRef(false);
         let newRoot = this.root.delete(
             this.comparator,
             this.ownerID,
+            didChange,
             key
         );
-        let rootMerged = false;
-        if (this.root !== newRoot) {
-            if (newRoot.size < MIN_ROOT_CHILDREN) {
-                const isLeaf = newRoot.constructor === Leaf;
-                if (!isLeaf) {
-                    // Since the minimum number of children in
-                    // the root is 2, the root must have a single
-                    // child.
-                    newRoot = newRoot.children[0];
-                    rootMerged = true;
-                }
-                // If the root is a leaf, it can be empty.
-            }
 
-            return new this.constructor({
+        if (!isSet(didChange)) return this;
+
+        let rootMerged = false;
+        if (newRoot.size < MIN_ROOT_CHILDREN) {
+            const isLeaf = newRoot.constructor === Leaf;
+            if (!isLeaf) {
+                // Since the minimum number of children in
+                // the root is 2, the root must have a single
+                // child.
+                newRoot = newRoot.children[0];
+                rootMerged = true;
+            }
+            // If the root is a leaf, it can be empty.
+        }
+
+        const canMutate = !!this.ownerID;
+
+        let newTree;
+        const newHeight = rootMerged ? this.height - 1 : this.height;
+        const newSize = this.size - 1;
+
+        if (canMutate) {
+            newTree = this;
+            this.root = newRoot;
+            this.height = newHeight;
+            this.size = newSize;
+            this._didAlter = true;
+        } else {
+            newTree = new this.constructor({
                 comparator: this.comparator,
                 extractor: this.extractor,
                 root: newRoot,
-                height: rootMerged ? this.height - 1 : this.height,
-                size: this.size - 1,
+                height: newHeight,
+                size: newSize,
             });
         }
-        return this;
+        return newTree;
     },
 
     asMutable() {
@@ -173,6 +209,12 @@ extend(BPlusTree.prototype, {
                 size: this.size,
             })
             : this;
+    },
+
+    withMutations(fn) {
+        const mutable = this.asMutable();
+        fn(mutable);
+        return mutable._didAlter ? mutable.asImmutable() : this;
     },
 
     _baseBetween(extractor, _fromKey, _toKey) {
@@ -442,7 +484,6 @@ extend(BPlusTree.prototype, {
     findLeaf(cmp, key) {
         let curr = this.root;
         const numAccessesToReachLeaf = this.height;
-
         for (let i = 0; i < numAccessesToReachLeaf; i++) {
             const idx = curr.childIdxForKey(cmp, key);
             curr = curr.children[idx];
@@ -567,7 +608,7 @@ function fromSortedBase(arr, _opts, isPairs) {
                 const operation = leafsProcessed
                     ? child => {
                         const _head = child.keys[0];
-                        child.keys = tail(child.keys); // eslint-disable-line
+                        child.keys = tail(null, child.keys); // eslint-disable-line
                         return _head;
                     }
                     : child => child.keys[0];
@@ -575,7 +616,7 @@ function fromSortedBase(arr, _opts, isPairs) {
                 // For the left-most nodes, we don't
                 // take a key from its children.
                 const operateOn = firstInChunk
-                    ? tail(chunk)
+                    ? tail(null, chunk)
                     : chunk;
 
                 const newKeys = fastMap(operation, operateOn);

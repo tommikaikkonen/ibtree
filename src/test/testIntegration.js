@@ -3,6 +3,7 @@ import range from 'ramda/src/range';
 import chai from 'chai';
 import sinonChai from 'sinon-chai';
 import random from 'lodash/random';
+import deepFreeze from 'deep-freeze';
 import {
     LEAF_MIN_CHILDREN,
     LEAF_MAX_CHILDREN,
@@ -55,8 +56,9 @@ function assertTreeOrder(order, tree) {
 
 // const testSizes = range(0, 500);
 // const loops = range(0, 10);
-const testSizes = range(1, 2);
-const loops = range(0, 1);
+const testSizes = range(0, 500);
+testSizes.unshift(0, 1, 2, 3);
+const loops = range(0, 10);
 
 loops.forEach(() => {
     if (!testSizes.length) return;
@@ -69,10 +71,13 @@ loops.forEach(() => {
         describe('bplus Tree', () => {
             it('init', () => {
                 const tree = new BTMap();
+                deepFreeze(tree);
+
                 let _tree = tree;
                 for (let i = 0; i < testSize; i++) {
                     assertTreeOrder(tree.order, tree);
                     _tree = _tree.set(i, `value${i}`);
+                    deepFreeze(tree);
                 }
 
                 assertTreeOrder(tree.order, tree);
@@ -114,6 +119,63 @@ loops.forEach(() => {
                     expect(tree.get(i)).to.equal(`value${i}`);
                 }
                 expect(tree.size).to.equal(testSize);
+            });
+
+            describe('transient', () => {
+                it('setting values works', () => {
+                    let tree = new BTMap();
+                    deepFreeze(tree);
+
+                    tree = tree.asMutable();
+                    for (let i = 0; i < testSize; i++) {
+                        tree.set(i, `value${i}`);
+                        assertTreeOrder(tree.order, tree);
+                    }
+                    const result = tree.asImmutable();
+                    expect(result.size).to.equal(testSize);
+
+                    for (let i = 0; i < testSize; i++) {
+                        expect(tree.get(i)).to.equal(`value${i}`);
+                    }
+                });
+
+                it('deleting values works', () => {
+                    const data = new Array(testSize);
+                    for (let i = 0; i < testSize; i++) {
+                        data[i] = [i, `value${i}`];
+                    }
+
+                    let tree = BTMap.from(data);
+                    deepFreeze(tree);
+
+                    tree = tree.asMutable();
+                    for (let i = 0; i < testSize; i++) {
+                        tree.delete(i);
+                        assertTreeOrder(tree.order, tree);
+                    }
+                    const result = tree.asImmutable();
+                    expect(result.size).to.equal(0);
+                });
+
+                it('withMutations works', () => {
+                    const data = new Array(testSize);
+                    for (let i = 0; i < testSize; i++) {
+                        data[i] = [i, `value${i}`];
+                    }
+                    let tree = new BTMap();
+                    deepFreeze(tree);
+
+                    tree = tree.withMutations(_t => {
+                        for (let i = 0; i < testSize; i++) {
+                            _t.set(i, `value${i}`);
+                        }
+                    });
+                    expect(tree.size).to.equal(testSize);
+
+                    for (let i = 0; i < testSize; i++) {
+                        expect(tree.get(i)).to.equal(`value${i}`);
+                    }
+                });
             });
 
             describe('iteration', () => {
@@ -259,6 +321,7 @@ loops.forEach(() => {
 
                 beforeEach(() => {
                     tree = BTMap.from(data);
+                    deepFreeze(tree);
                 });
 
                 it('correctly deletes', () => {
@@ -266,6 +329,7 @@ loops.forEach(() => {
                     keysToDelete.forEach(key => {
                         assertTreeOrder(tree.order, tree);
                         tree = tree.delete(key);
+                        deepFreeze(tree);
                     });
                     expect(tree.root.size).to.equal(0);
                     expect(tree.size).to.equal(0);
@@ -277,6 +341,7 @@ loops.forEach(() => {
                     keysToDelete.forEach(key => {
                         assertTreeOrder(tree.order, tree);
                         tree = tree.delete(key);
+                        deepFreeze(tree);
                     });
                     expect(tree.root.size).to.equal(0);
                     expect(tree.size).to.equal(0);
@@ -290,6 +355,7 @@ loops.forEach(() => {
                         const key = keysToDelete[randomIdx];
                         keysToDelete.splice(randomIdx, 1);
                         tree = tree.delete(key);
+                        deepFreeze(tree);
                     }
                     expect(tree.root.size).to.equal(0);
                     expect(tree.size).to.equal(0);

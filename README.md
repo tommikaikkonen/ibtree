@@ -8,6 +8,7 @@ A performant, in-memory, immutable B+ tree data structure.
 - Implements extended ES6 Map and Set interfaces (`BTMap` and `BTSet`)
 - No 3rd party dependencies
 - Insertion, deletion and bulk-loading
+- Batched mutations
 - Supports any key types with custom comparators and key functions
 - Range search
 - Iteration
@@ -42,6 +43,13 @@ Array.from(map.values(2, 3));
 // ['two', 'three']
 Array.from(map.values(3, 2));
 // ['three', 'two']
+
+map = map.withMutations(m => {
+    m.set(5, 'five').set(6, 'six').set(7, 'seven');
+});
+
+Array.from(map.values())
+// ['one', 'two', 'three', 'four', 'give', 'six', 'seven']
 ```
 
 ### BTSet
@@ -80,57 +88,122 @@ When the tree is updated, each affected node's keys and children (Arrays of leng
 
 ```
 Add N entries to an empty structure
-BPlusTree (10)                :       489790.67 +/- 2.26% op/s
-ImmutableMap (10)             :       123086.68 +/- 2.02% op/s
-BPlusTree (1000)              :         1489.95 +/- 1.89% op/s
-ImmutableMap (1000)           :         1252.36 +/- 2.08% op/s
-BPlusTree (100000)            :            9.33 +/- 2.29% op/s
-ImmutableMap (100000)         :            4.26 +/- 5.34% op/s
+  N=10:
+  1. ibtree              :          421 869,00 +/- 2.88% op/s,
+  2. Immutable.Map       :          110 444,00 +/- 3.09% op/s, 73.8% slower than ibtree
+
+  N=1000:
+  1. ibtree              :            1 156,00 +/- 3.59% op/s,
+  2. Immutable.Map       :            1 114,00 +/- 2.79% op/s, 3.6% slower than ibtree
+
+  N=100000:
+  1. ibtree              :                7,00 +/- 8.39% op/s,
+  2. Immutable.Map       :                4,00 +/- 3.51% op/s, 42.9% slower than ibtree
+
+
+
+Add N entries to a non-empty structure (transient)
+  N=10:
+  1. ibtree              :          466 782,00 +/- 0.76% op/s,
+  2. Immutable.Map       :          155 428,00 +/- 1.24% op/s, 66.7% slower than ibtree
+
+  N=1000:
+  1. Immutable.Map       :            6 423,00 +/- 0.86% op/s,
+  2. ibtree              :            1 578,00 +/- 3.13% op/s, 75.4% slower than Immutable.Map
+
+  N=100000:
+  1. ibtree              :               13,00 +/- 1.56% op/s,
+  2. Immutable.Map       :               10,00 +/- 7.70% op/s, 23.1% slower than ibtree
+
 
 
 Bulkload N entries from empty (transient)
-BPlusTree (10)                :       179840.55 +/- 1.72% op/s
-ImmutableMap (10)             :       151030.70 +/- 1.57% op/s
-BPlusTree (1000)              :        12267.07 +/- 3.14% op/s
-ImmutableMap (1000)           :         6543.59 +/- 1.71% op/s
-BPlusTree (100000)            :           83.79 +/- 1.06% op/s
-ImmutableMap (100000)         :           11.58 +/- 7.39% op/s
+  N=10:
+  1. Immutable.Map       :          151 434,00 +/- 0.93% op/s,
+  2. ibtree              :          150 663,00 +/- 6.91% op/s, 0.5% slower than Immutable.Map
+
+  N=1000:
+  1. Immutable.Map       :            6 208,00 +/- 0.97% op/s,
+  2. ibtree              :            5 512,00 +/- 1.60% op/s, 11.2% slower than Immutable.Map
+
+  N=100000:
+  1. ibtree              :               45,00 +/- 0.82% op/s,
+  2. Immutable.Map       :               10,00 +/- 7.43% op/s, 77.8% slower than ibtree
+
 
 
 Get a random key from N entries
-BPlusTree (10)                :      4920979.07 +/- 1.62% op/s
-ImmutableMap (10)             :      5396384.46 +/- 0.58% op/s
-BPlusTree (1000)              :      3479077.10 +/- 0.83% op/s
-ImmutableMap (1000)           :      4751287.29 +/- 0.68% op/s
-BPlusTree (100000)            :      1961553.54 +/- 0.78% op/s
-ImmutableMap (100000)         :      1259415.57 +/- 0.54% op/s
+  N=10:
+  1. Immutable.Map       :        5 081 087,00 +/- 1.88% op/s,
+  2. ibtree              :        4 652 828,00 +/- 2.13% op/s, 8.4% slower than Immutable.Map
+
+  N=1000:
+  1. Immutable.Map       :        4 670 681,00 +/- 2.12% op/s,
+  2. ibtree              :        2 909 412,00 +/- 1.62% op/s, 37.7% slower than Immutable.Map
+
+  N=100000:
+  1. ibtree              :        1 404 300,00 +/- 2.37% op/s,
+  2. Immutable.Map       :        1 006 802,00 +/- 4.51% op/s, 28.3% slower than ibtree
+
 
 
 Delete one entry from N entries
-BPlusTree (10)                :      1239863.55 +/- 0.54% op/s
-ImmutableMap (10)             :      1885839.47 +/- 0.68% op/s
-BPlusTree (1000)              :       786251.70 +/- 2.50% op/s
-ImmutableMap (1000)           :       926212.27 +/- 2.70% op/s
-BPlusTree (100000)            :       533927.56 +/- 2.96% op/s
-ImmutableMap (100000)         :       475102.98 +/- 1.49% op/s
+  N=10:
+  1. Immutable.Map       :        1 620 353,00 +/- 1.77% op/s,
+  2. ibtree              :          642 680,00 +/- 3.95% op/s, 60.3% slower than Immutable.Map
+
+  N=1000:
+  1. Immutable.Map       :          837 346,00 +/- 1.00% op/s,
+  2. ibtree              :          420 102,00 +/- 2.67% op/s, 49.8% slower than Immutable.Map
+
+  N=100000:
+  1. Immutable.Map       :          418 477,00 +/- 1.68% op/s,
+  2. ibtree              :          317 902,00 +/- 2.49% op/s, 24.0% slower than Immutable.Map
+
 
 
 Delete All N Entries
-BPlusTree (10)                :      4366932.55 +/- 0.57% op/s
-ImmutableMap (10)             :      4244500.38 +/- 1.55% op/s
-BPlusTree (1000)              :        45030.32 +/- 2.01% op/s
-ImmutableMap (1000)           :        47361.59 +/- 2.94% op/s
-BPlusTree (100000)            :          466.41 +/- 1.88% op/s
-ImmutableMap (100000)         :          486.25 +/- 0.94% op/s
+  N=10:
+  1. Immutable.Map       :        4 196 670,00 +/- 0.76% op/s,
+  2. ibtree              :        2 420 761,00 +/- 1.72% op/s, 42.3% slower than Immutable.Map
+
+  N=1000:
+  1. Immutable.Map       :           45 432,00 +/- 0.93% op/s,
+  2. ibtree              :           25 508,00 +/- 1.46% op/s, 43.9% slower than Immutable.Map
+
+  N=100000:
+  1. Immutable.Map       :              433,00 +/- 2.53% op/s,
+  2. ibtree              :              254,00 +/- 0.96% op/s, 41.3% slower than Immutable.Map
+
+
+
+Delete All N Entries (transient)
+  N=10:
+  1. Immutable.Map       :        4 951 169,00 +/- 4.10% op/s,
+  2. ibtree              :        2 363 744,00 +/- 1.12% op/s, 52.3% slower than Immutable.Map
+
+  N=1000:
+  1. Immutable.Map       :           63 367,00 +/- 2.62% op/s,
+  2. ibtree              :           27 575,00 +/- 4.21% op/s, 56.5% slower than Immutable.Map
+
+  N=100000:
+  1. Immutable.Map       :              564,00 +/- 0.93% op/s,
+  2. ibtree              :              275,00 +/- 1.78% op/s, 51.2% slower than Immutable.Map
+
 
 
 Get a random key range in order from N entries
-BPlusTree (10)                :       354611.75 +/- 4.97% op/s
-ImmutableMap (10)             :       178278.87 +/- 4.29% op/s
-BPlusTree (1000)              :       335082.96 +/- 4.93% op/s
-ImmutableMap (1000)           :         8885.40 +/- 0.67% op/s
-BPlusTree (100000)            :       291932.93 +/- 4.45% op/s
-ImmutableMap (100000)         :           69.72 +/- 1.43% op/s
+  N=10:
+  1. ibtree              :          314 549,00 +/- 6.00% op/s,
+  2. Immutable.Map       :          172 788,00 +/- 5.14% op/s, 45.1% slower than ibtree
+
+  N=1000:
+  1. ibtree              :          288 446,00 +/- 5.25% op/s,
+  2. Immutable.Map       :            7 632,00 +/- 2.30% op/s, 97.4% slower than ibtree
+
+  N=100000:
+  1. ibtree              :          239 099,00 +/- 5.02% op/s,
+  2. Immutable.Map       :               60,00 +/- 2.99% op/s, 100.0% slower than ibtree
 ```
 
 ## API
@@ -176,6 +249,9 @@ map.get('key2');
 
 - `delete(key)` and `set(key, value)` return a new, updated BTMap instance instead of mutating the current one.
 - `clear` returns an empty `BTMap`.
+- `withMutations(fn)` calls `fn` with a mutable version of the BTMap. Any methods called inside `fn` on the mutable version will be applied mutatively. Returns an immutable version of the tree.
+- `asMutable` returns a mutable version of the BTMap.
+- `asImmutable` returns an immutable version of the BTMap.
 
 These work the same as native Map:
 
@@ -218,6 +294,9 @@ btree.has('value2');
 
 - `delete(value)` and `add(value)` return a new, updated BTSet instance instead of mutating the current one.
 - `clear` returns an empty `BTSet`.
+- `withMutations(fn)` calls `fn` with a mutable version of the BTSet. Any methods called inside `fn` on the mutable version will be applied mutatively. Returns an immutable version of the tree.
+- `asMutable` returns a mutable version of the BTSet.
+- `asImmutable` returns an immutable version of the BTSet.
 
 These work the same as native Set:
 
