@@ -49,7 +49,7 @@ map = map.withMutations(m => {
 });
 
 Array.from(map.values())
-// ['one', 'two', 'three', 'four', 'give', 'six', 'seven']
+// ['one', 'two', 'three', 'four', 'five', 'six', 'seven']
 ```
 
 ### BTSet
@@ -61,7 +61,7 @@ let set = BTSet.from([1, 2, 3]);
 
 set.has(1)
 // true
-set.has(4)
+set.has(0)
 // false
 set = set.add(0);
 set.has(0)
@@ -72,6 +72,8 @@ Array.from(set.values())
 
 Array.from(map.values(2, 3));
 // [2, 3]
+ 
+// Reverse range search when first argument is larger than the second.
 Array.from(map.values(2, -10));
 // [2, 1, 0]
 ```
@@ -83,6 +85,15 @@ Array.from(map.values(2, -10));
 The tradeoff between Immutable.Map and `BTMap` is that `BTMap` uses more memory to store updated trees.
 
 When the tree is updated, each affected node's keys and children (Arrays of length between 32 and 64) are shallow copied. There's 1-5 affected nodes based on the height of your tree, therefore each update creates (1-5) * 2 new arrays of length between 32 and 64, whereas Immutable.js doesn't copy as much. However, if you don't keep references to many historical versions, they should get garbage collected and shouldn't be a problem.
+
+### Summary
+
+- On additions, `ibtree` fares better than `Immutable.Map` on small and large N (10 and 100000), `Immutable.Map` is faster on mid-size (1000).
+- On deletions, `ibtree` is ~50% slower than `Immutable.Map`.
+- On single key search, `ibtree` is slower on a mid-size N (1000) but faster on a larger N (100000) than `Immutable.Map`.
+- On range search, `ibtree` is considerably faster than `Immutable.Map`.
+
+### Detailed Results
 
 **These are relative, not absolute benchmarks. The benchmark implementation uses an adapter to interface with both Immutable and ibtree, which introduces a small overhead.**
 
