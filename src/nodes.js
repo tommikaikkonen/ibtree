@@ -19,7 +19,6 @@ import {
     tail,
     median,
     extend,
-    tagOwnerID,
     setRef,
     isSet,
     canMutate,
@@ -100,6 +99,7 @@ extend(Leaf.prototype, {
         let newLeaf;
         const newKeys = withoutIdx(ownerID, idx, this.keys);
         const newChildren = withoutIdx(ownerID, idx, this.children);
+
         if (canMutate(this, ownerID)) {
             newLeaf = this;
             newLeaf.keys = newKeys;
@@ -460,6 +460,11 @@ extend(InternalNode.prototype, {
 
         for (let i = 0; i < newChildren.length; i++) {
             replaced[idx + i] = newChildren[i];
+        }
+
+        if (canMutate(this, ownerID)) {
+            this.children = replaced;
+            return this;
         }
 
         return new InternalNode({

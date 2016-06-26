@@ -1,4 +1,6 @@
 'use strict';
+const Immutable = require('immutable');
+const BTMap = require('../lib').BTMap;
 const mapObjIndexed = require('ramda/src/mapObjIndexed');
 const adapters = require('./utils').adapters;
 
@@ -10,12 +12,23 @@ module.exports = {
     benchmarks,
 };
 
-mapObjIndexed((adapter, name) => {
-    benchmarks[name] = keys => () => {
-        let obj = adapter.new().asMutable();
+benchmarks['Immutable.Map'] = keys => {
+    return () => {
+        const m = (new Immutable.Map()).asMutable();
         for (let i = 0, len = keys.length; i < len; i++) {
-            obj = obj.set(keys[i], i);
+            m.set(keys[i], i);
         }
-        obj.asImmutable();
+        m.asImmutable();
     };
-}, adapters);
+};
+
+benchmarks['ibtree'] = keys => {
+    return () => {
+        let m = new BTMap();
+        m = m.asMutable();
+        for (let i = 0, len = keys.length; i < len; i++) {
+            m.set(keys[i], i);
+        }
+        m.asImmutable();
+    };
+};

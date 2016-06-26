@@ -106,9 +106,10 @@ export function fastMap(fn, arr) {
 export function splitAt(ownerID, idx, arr) {
     const arrLen = arr.length;
     const firstArrLen = idx;
-    const firstArr = allocateArray(ownerID, firstArrLen);
     const secondArrLen = arrLen - idx;
     const secondArr = allocateArray(ownerID, secondArrLen);
+
+    const firstArr = allocateArray(ownerID, firstArrLen);
 
     for (let i = 0; i < idx; i++) {
         firstArr[i] = arr[i];

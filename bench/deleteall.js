@@ -10,14 +10,6 @@ module.exports = {
     benchmarks,
 };
 
-// benchmarks['Native Object'] = keys => () => {
-//     let obj = {};
-//     for (let i = 0, len = keys.length; i < len; i++) {
-//         obj = Object.assign({}, obj);
-//         obj[keys[i]] = i;
-//     }
-// };
-
 mapObjIndexed((adapter, name) => {
     benchmarks[name] = keys => {
         let obj = adapter.from(keys);

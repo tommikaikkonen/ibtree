@@ -1,7 +1,5 @@
-const Immutable = require('immutable');
 const Benchmark = require('benchmark');
 const pad = require('pad');
-const random = require('lodash/random');
 const range = require('ramda/src/range');
 const sortBy = require('ramda/src/sortBy');
 const toPairs = require('ramda/src/toPairs');
@@ -24,10 +22,6 @@ const log = function() {
         if (!bySize.hasOwnProperty(size)) {
             bySize[size] = {};
         }
-        const name = pad(results.name, 30, '.');
-        const ops = pad(15, results.hz.toFixed(2), '.');
-        const relativeErrMargin = results.stats.rme.toFixed(2);
-        const resultRow = `${name}${ops} +/- ${relativeErrMargin}% op/s`;
 
         bySize[size][contender] = {
             result: results.hz,

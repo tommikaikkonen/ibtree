@@ -128,13 +128,13 @@ extend(BPlusTree.prototype, {
             this._didAlter = true;
             return this;
         }
-
         return new this.constructor({
             extractor: this.extractor,
             comparator: this.comparator,
             root: newRoot,
             height: newHeight,
             size: newSize,
+            ownerID: this.ownerID,
         });
     },
 
@@ -181,6 +181,7 @@ extend(BPlusTree.prototype, {
                 root: newRoot,
                 height: newHeight,
                 size: newSize,
+                ownerID: this.ownerID,
             });
         }
         return newTree;
