@@ -11,6 +11,7 @@ import {
     tagOwnerID,
     makeRef,
     isSet,
+    normalizeRangeSpec,
 } from './utils';
 import {
     ORDER,
@@ -218,23 +219,26 @@ extend(BPlusTree.prototype, {
         return mutable._didAlter ? mutable.asImmutable() : this;
     },
 
-    _baseBetween(extractor, _fromKey, _toKey) {
+    _baseBetween(extractor, _rangeSpec) {
         if (this.size === 0) return getEmptyIterator();
+
+        const rangeSpec = normalizeRangeSpec(_rangeSpec);
+
         const fromKey = this.extractor
-            ? this.extractor(_fromKey)
-            : _fromKey;
+            ? this.extractor(rangeSpec.from)
+            : rangeSpec.from;
 
         const toKey = this.extractor
-            ? this.extractor(_toKey)
-            : _toKey;
+            ? this.extractor(rangeSpec.to)
+            : rangeSpec.to;
 
         const isReverse = this.comparator(fromKey, toKey) > 0;
 
         const fromIsRight = isReverse;
         const toIsRight = !fromIsRight;
 
-        const fromPath = this.findPath(fromKey, fromIsRight);
-        const toPath = this.findPath(toKey, toIsRight);
+        const fromPath = this.findPath(fromKey, fromIsRight, rangeSpec.fromInclusive);
+        const toPath = this.findPath(toKey, toIsRight, rangeSpec.toInclusive);
 
         if (fromPath === null || toPath === null) {
             return getEmptyIterator();
@@ -249,7 +253,17 @@ extend(BPlusTree.prototype, {
     },
 
     between(fromKey, toKey) {
-        return this._baseBetween(extractEntry, fromKey, toKey);
+        if (arguments.length === 1) {
+            const rangeSpec = arguments[0];
+            return this._baseBetween(extractEntry, rangeSpec);
+        }
+
+        const spec = {
+            from: fromKey,
+            to: toKey,
+        };
+
+        return this._baseBetween(extractEntry, spec);
     },
 
     /**
@@ -413,7 +427,7 @@ extend(BPlusTree.prototype, {
         return iterator;
     },
 
-    findPath(key, fromRight) {
+    findPath(key, fromRight, isInclusive) {
         if (this.size === 0) return null;
 
         const cmp = this.comparator;
@@ -435,10 +449,11 @@ extend(BPlusTree.prototype, {
 
         const parent = prev;
 
+        const searchFuncName = (fromRight ? 'lt' : 'gt') + (isInclusive ? 'e' : '');
+        const searchFunc = binarySearch[searchFuncName];
+
         // curr should be a leaf now.
-        const idx = fromRight
-            ? binarySearch.lte(curr.keys, key, cmp)
-            : binarySearch.gte(curr.keys, key, cmp);
+        const idx = searchFunc(curr.keys, key, cmp);
 
         if (idx === curr.keys.length) {
             if (!fromRight) {
@@ -523,12 +538,20 @@ const makeIteratorMethod = extractor =>
     function getRangeIterator() {
         if (arguments.length === 0) {
             return this._iterateAllWithExtractFn(extractor);
+        } else if (arguments.length === 1) {
+            const spec = arguments[0];
+            this._baseBetween(
+                extractor,
+                spec
+            );
         }
 
-        const fromKey = arguments[0];
-        const toKey = arguments[1];
+        const spec = {
+            from: arguments[0],
+            to: arguments[1],
+        };
 
-        return this._baseBetween(extractor, fromKey, toKey);
+        return this._baseBetween(extractor, spec);
     };
 
 

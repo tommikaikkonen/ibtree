@@ -402,26 +402,27 @@ describe('BTree', () => {
             it('findPath', () => {
                 const isLeft = undefined;
                 const isRight = true;
+                const isInclusive = true;
 
-                const path = tree.findPath(1, isLeft);
+                const path = tree.findPath(1, isLeft, isInclusive);
                 expect(path.toArray()).to.deep.equal([0, 0]);
 
-                const nonexistingPath = tree.findPath(0, isLeft);
+                const nonexistingPath = tree.findPath(0, isLeft, isInclusive);
                 // Should return the leftmost path in this case.
                 expect(nonexistingPath.toArray()).to.deep.equal([0, 0]);
 
-                expect(tree.findPath(0, isRight)).to.be.null;
+                expect(tree.findPath(0, isRight, isInclusive)).to.be.null;
 
-                const betweenKeys = tree.findPath(1.5, isLeft);
+                const betweenKeys = tree.findPath(1.5, isLeft, isInclusive);
                 expect(betweenKeys.toArray()).to.deep.equal([1, 0]);
 
-                const betweenKeys2 = tree.findPath(1.5, isRight);
+                const betweenKeys2 = tree.findPath(1.5, isRight, isInclusive);
                 expect(betweenKeys2.toArray()).to.deep.equal([0, 0]);
 
-                const nonexistingPath2 = tree.findPath(4, isRight);
+                const nonexistingPath2 = tree.findPath(4, isRight, isInclusive);
                 expect(nonexistingPath2.toArray()).to.deep.equal([1, 1]);
 
-                expect(tree.findPath(4, isLeft)).to.be.null;
+                expect(tree.findPath(4, isLeft, isInclusive)).to.be.null;
             });
 
             it('_nextPath', () => {

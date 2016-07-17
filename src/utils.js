@@ -217,3 +217,16 @@ export function setRef(ref) {
 export function isSet(ref) {
     return !!ref.value;
 }
+
+export function normalizeRangeSpec(spec) {
+    return {
+        from: spec.from,
+        to: spec.to,
+        fromInclusive: spec.hasOwnProperty('fromInclusive')
+            ? spec.fromInclusive
+            : true,
+        toInclusive: spec.hasOwnProperty('toInclusive')
+            ? spec.toInclusive
+            : true,
+    };
+}
