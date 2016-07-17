@@ -1,6 +1,6 @@
 {
   "name": "ibtree",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A performant, in-memory, immutable B+ tree data structure",
   "main": "lib/index.js",
   "scripts": {
