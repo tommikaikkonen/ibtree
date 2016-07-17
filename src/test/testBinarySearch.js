@@ -37,6 +37,22 @@ describe('Binary Search', () => {
         expect(idxfour).to.equal(3);
     });
 
+    it('lt', () => {
+        const idx = binarySearch.lt(arr, 13, defaultComparator);
+        expect(idx).to.equal(0);
+
+        const idxtwo = binarySearch.lt(arr, 12, defaultComparator);
+        expect(idxtwo).to.equal(0);
+
+        expect(binarySearch.lt(arr, 10, defaultComparator)).to.equal(-1);
+
+        const idxthree = binarySearch.lt(arr, 9, defaultComparator);
+        expect(idxthree).to.equal(-1);
+
+        const idxfour = binarySearch.lt(arr, 18, defaultComparator);
+        expect(idxfour).to.equal(3);
+    });
+
     it('gte', () => {
         const idx = binarySearch.gte(arr, 13, defaultComparator);
         expect(idx).to.equal(1);
@@ -47,6 +63,19 @@ describe('Binary Search', () => {
         expect(idxthree).to.equal(0);
 
         const idxfour = binarySearch.gte(arr, 18, defaultComparator);
+        expect(idxfour).to.equal(4); // Note: this returns array length.
+    });
+
+    it('gt', () => {
+        const idx = binarySearch.gt(arr, 13, defaultComparator);
+        expect(idx).to.equal(2);
+        const idxtwo = binarySearch.gt(arr, 12, defaultComparator);
+        expect(idxtwo).to.equal(1);
+
+        const idxthree = binarySearch.gt(arr, 9, defaultComparator);
+        expect(idxthree).to.equal(0);
+
+        const idxfour = binarySearch.gt(arr, 18, defaultComparator);
         expect(idxfour).to.equal(4); // Note: this returns array length.
     });
 });

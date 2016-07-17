@@ -324,11 +324,41 @@ These work the same as native Set:
 
 ## Range Search Methods for BTSet and BTMap
 
-The key benefit of B+ trees is the fast range search. Range searches extend the `entries`, `values` and `keys` instance methods to accept two arguments that specify the range boundaries.
+The key benefit of B+ trees is the fast range search. Range searches extend the `entries`, `values` and `keys` instance methods to accept a specification for the range boundaries that specify the range boundaries.
 
-- `entries([any fromKey, any toKey])` (also alias `entryRange`)
-- `values([any fromKey, any toKey])` (also alias `valueRange`)
-- `keys([any fromKey, any toKey])` (also alias `keyRange`)
+There are two ways to specify the boundaries -- an object specification or `from` and `to` keys.
+
+The object specification looks like this:
+
+```javascript
+tree.entries({
+  from: 5, // required
+  to: 10, // required
+  fromInclusive: true, // optional, default: true
+  toInclusive: false, // optional, default: true
+});
+```
+
+The two-key specification looks like this:
+
+```javascript
+tree.entries(20, 50);
+```
+
+and is equivalent to
+
+```javascript
+tree.entries({
+  from: 20, // required
+  to: 50, // required
+  // fromInclusive defaults to true
+  // toInclusive defaults to true
+});
+```
+
+- `entries([any fromKeyOrRangeSpec[, any toKey]])` (also alias `entryRange`)
+- `values([any fromKeyOrRangeSpec[, any toKey]])` (also alias `valueRange`)
+- `keys([any fromKeyOrRangeSpec[, any toKey]])` (also alias `keyRange`)
 
 If these functions are called with zero arguments, they iterate through all the elements in order, just like the corresponding native Map and Set methods.
 
@@ -336,7 +366,7 @@ These additional methods are also supported:
 
 - `range`, which is an alias for `entries` in BTMap and `values` in BTSet.
 
-All these methods return an iterator for elements whose keys satisfy `fromKey <= key <= toKey`. The order of iteration is decided by comparing `fromKey` and `toKey`. If `fromKey` > `toKey` according to the instance's comparator, the iteration will be performed in reverse.
+The order of iteration is decided by comparing `fromKey` and `toKey`. If `fromKey` > `toKey` according to the instance's comparator, the iteration will be performed in reverse.
 
 ```javascript
 const entries = [

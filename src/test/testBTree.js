@@ -403,26 +403,47 @@ describe('BTree', () => {
                 const isLeft = undefined;
                 const isRight = true;
                 const isInclusive = true;
+                const isExclusive = false;
 
+                // Inclusive lookup from the left.
                 const path = tree.findPath(1, isLeft, isInclusive);
                 expect(path.toArray()).to.deep.equal([0, 0]);
+
+                // Exclusive lookup from the left.
+                const _path = tree.findPath(1, isLeft, isExclusive);
+                expect(_path.toArray()).to.deep.equal([1, 0]);
 
                 const nonexistingPath = tree.findPath(0, isLeft, isInclusive);
                 // Should return the leftmost path in this case.
                 expect(nonexistingPath.toArray()).to.deep.equal([0, 0]);
 
+                const _nonexistingPath = tree.findPath(0, isLeft, isExclusive);
+                // Should return the leftmost path when exclusive too.
+                expect(_nonexistingPath.toArray()).to.deep.equal([0, 0]);
+
                 expect(tree.findPath(0, isRight, isInclusive)).to.be.null;
+                expect(tree.findPath(0, isRight, isExclusive)).to.be.null;
 
                 const betweenKeys = tree.findPath(1.5, isLeft, isInclusive);
                 expect(betweenKeys.toArray()).to.deep.equal([1, 0]);
 
+                const betweenKeysExclusive = tree.findPath(1.5, isLeft, isExclusive);
+                expect(betweenKeysExclusive.toArray()).to.deep.equal([1, 0]);
+
                 const betweenKeys2 = tree.findPath(1.5, isRight, isInclusive);
                 expect(betweenKeys2.toArray()).to.deep.equal([0, 0]);
+
+                const betweenKeys2Exclusive = tree.findPath(1.5, isRight, isExclusive);
+                expect(betweenKeys2Exclusive.toArray()).to.deep.equal([0, 0]);
 
                 const nonexistingPath2 = tree.findPath(4, isRight, isInclusive);
                 expect(nonexistingPath2.toArray()).to.deep.equal([1, 1]);
 
+                const nonexistingPath2Exclusive = tree.findPath(4, isRight, isExclusive);
+                expect(nonexistingPath2Exclusive.toArray()).to.deep.equal([1, 1]);
+
                 expect(tree.findPath(4, isLeft, isInclusive)).to.be.null;
+                expect(tree.findPath(4, isLeft, isExclusive)).to.be.null;
             });
 
             it('_nextPath', () => {

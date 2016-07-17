@@ -237,6 +237,40 @@ loops.forEach(() => {
                     }
                 });
 
+                it('works with exclusive specification', () => {
+                    const data = [];
+                    for (let i = 0; i < testSize; i++) {
+                        data.push([i, `value${i}`]);
+                    }
+
+                    const tree = BTMap.from(data);
+
+                    assertTreeOrder(tree.order, tree);
+
+                    if (testSize === 0) {
+                        expect(Array.from(tree.between({
+                            from: 0,
+                            to: 10,
+                            fromInclusive: false,
+                            toInclusive: false,
+                        })).length).to.equal(0);
+                    } else {
+                        let end = testSize - 2;
+                        const start = 0;
+                        if (end < start) {
+                            end = start;
+                        }
+                        const n = end - start + 1;
+                        const result = Array.from(tree.between({
+                            from: start,
+                            to: end,
+                            fromInclusive: false,
+                            toInclusive: false,
+                        }));
+                        expect(result.length).to.equal(n - 2);
+                    }
+                });
+
                 it('works when boundaries are outside keys', () => {
                     const data = [];
                     for (let i = 0; i < testSize; i++) {
