@@ -4,11 +4,11 @@ MOCHA_ARGS= --compilers js:babel-register
 MOCHA_TARGET=src/**/test*.js
 
 clean:
-	rm -rf lib
+	rm -rf dist
 
 build: clean
-	$(BIN)/babel src --out-dir lib
-	webpack --optimize-minimize
+	$(BIN)/webpack
+	$(BIN)/webpack --mode=build
 
 test: lint
 	NODE_ENV=test $(BIN)/mocha $(MOCHA_ARGS) $(MOCHA_TARGET) --prof
@@ -18,6 +18,9 @@ test-watch: lint
 
 lint:
 	$(BIN)/eslint src
+
+deploy:
+	$(BIN)/gulp deploy
 
 bench:
 	node runbench.js
