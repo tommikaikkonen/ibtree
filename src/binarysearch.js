@@ -1,4 +1,3 @@
-// predicate should return true if we should go right.
 function baseLte(inclusive, array, value, cmp) {
     const len = array.length;
     if (len === 0 || !(inclusive ? cmp(array[0], value) <= 0 : cmp(array[0], value) < 0)) {
@@ -13,10 +12,8 @@ function baseLte(inclusive, array, value, cmp) {
         const mid = (r + l) >>> 1;
         const item = array[mid];
         if (inclusive ? cmp(item, value) <= 0 : cmp(item, value) < 0) {
-            // value at `mid` is less than or equal to `value`, go right.
             l = mid;
         } else {
-            // if value at `mid` is larger than `value`, go left.
             r = mid;
         }
     }
@@ -27,20 +24,19 @@ function baseLte(inclusive, array, value, cmp) {
 export const lte = baseLte.bind(null, true);
 export const lt = baseLte.bind(null, false);
 
-// predicate should return true if we should go left
 export function baseGte(inclusive, array, value, cmp) {
     const len = array.length;
-    if (len === 0 || !(inclusive ? cmp(array[len - 1], value) >= 0 : cmp(array[len - 1], value) > 0)) return len;
+    if (len === 0 || !(inclusive
+            ? cmp(array[len - 1], value) >= 0
+            : cmp(array[len - 1], value) > 0)) return len;
     let l = -1;
     let r = len - 1;
     while (r - l > 1) {
         const mid = (r + l) >>> 1;
         const item = array[mid];
         if (inclusive ? cmp(item, value) >= 0 : cmp(item, value) > 0) {
-            // value at `mid` is less than or equal to `value`, go right.
             r = mid;
         } else {
-            // if value at `mid` is larger than `value`, go left.
             l = mid;
         }
     }
