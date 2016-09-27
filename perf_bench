@@ -1,6 +1,0 @@
-echo "Starting Benchmark"
-node --prof runbench.js
-echo "Benchmark done."
-echo "Processing profiling information..."
-node --prof-process $(ls -t1 | grep 'isolate' | head -1) > processed.txt
-echo "Done. See results in processed.txt"
