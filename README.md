@@ -1,7 +1,7 @@
 ibtree
 ===============
 
-A performant, in-memory, immutable B+ tree data structure. 
+A performant, in-memory, immutable B+ tree data structure.
 
 ## Features
 
@@ -13,6 +13,12 @@ A performant, in-memory, immutable B+ tree data structure.
 - Range search
 - Iteration
 - Similar performance to Immutable.Map using Map operations, considerably faster range search due to the B+ tree data structure
+
+## Installation
+
+```bash
+npm install ibtree --save
+```
 
 ## Getting Started
 
@@ -326,7 +332,7 @@ These work the same as native Set:
 
 The key benefit of B+ trees is the fast range search. Range searches extend the `entries`, `values` and `keys` instance methods to accept a specification for the range boundaries that specify the range boundaries.
 
-There are two ways to specify the boundaries -- an object specification or `from` and `to` keys.
+There are two ways to specify the boundaries -- an object specification or to pass `from` and `to` keys as arguments.
 
 The object specification looks like this:
 
