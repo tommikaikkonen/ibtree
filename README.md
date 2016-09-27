@@ -16,11 +16,29 @@ A performant, in-memory, immutable B+ tree data structure.
 
 ## Installation
 
+**NPM**
+
 ```bash
 npm install ibtree --save
 ```
 
+**Script tag** (only latest version)
+
+Normal
+
+```html
+<script src="https://tommikaikkonen.github.io/ibtree/dist/ibtree.js"></script>
+```
+
+Minimized
+
+```html
+<script src="https://tommikaikkonen.github.io/ibtree/dist/ibtree.min.js"></script>
+```
+
 ## Getting Started
+
+Try it out in [JSBin](https://jsbin.com/cutewenica/1/edit?js,console).
 
 ### BTMap
 
