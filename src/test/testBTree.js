@@ -330,11 +330,11 @@ describe('BTree', () => {
                 expect(leaf2).to.equal(tree.root.children[1]);
             });
 
-            it('between', () => {
+            it('entries', () => {
                 const findPathSpy = sinon.spy(tree, 'findPath');
                 const getIteratorSpy = sinon.spy(tree, '_iteratorFromTo');
 
-                const result = tree.between(2, 3);
+                const result = tree.entries(2, 3);
                 expect(result).to.equal(getIteratorSpy.firstCall.returnValue);
 
                 const findFromPathCall = findPathSpy.getCall(0);
@@ -351,11 +351,11 @@ describe('BTree', () => {
                 expect(isReverse).to.be.false;
             });
 
-            it('between same value', () => {
+            it('entries same value', () => {
                 const findPathSpy = sinon.spy(tree, 'findPath');
                 const getIteratorSpy = sinon.spy(tree, '_iteratorFromTo');
 
-                const result = tree.between(2, 2);
+                const result = tree.entries(2, 2);
                 expect(result).to.equal(getIteratorSpy.firstCall.returnValue);
 
                 const findFromPathCall = findPathSpy.getCall(0);
@@ -372,16 +372,16 @@ describe('BTree', () => {
                 expect(isReverse).to.be.false;
             });
 
-            it('between nonexisting value', () => {
-                const result = tree.between(999, 1000);
+            it('entries nonexisting value', () => {
+                const result = tree.entries(999, 1000);
                 assertEmptyIterator(result);
             });
 
-            it('between reverse', () => {
+            it('entries reverse', () => {
                 const findPathSpy = sinon.spy(tree, 'findPath');
                 const getIteratorSpy = sinon.spy(tree, '_iteratorFromTo');
 
-                const result = tree.between(3, 2);
+                const result = tree.entries(3, 2);
                 expect(result).to.equal(getIteratorSpy.firstCall.returnValue);
 
                 const findFromPathCall = findPathSpy.firstCall;
@@ -424,17 +424,17 @@ describe('BTree', () => {
                 expect(tree.findPath(0, isRight, isInclusive)).to.be.null;
                 expect(tree.findPath(0, isRight, isExclusive)).to.be.null;
 
-                const betweenKeys = tree.findPath(1.5, isLeft, isInclusive);
-                expect(betweenKeys.toArray()).to.deep.equal([1, 0]);
+                const entriesKeys = tree.findPath(1.5, isLeft, isInclusive);
+                expect(entriesKeys.toArray()).to.deep.equal([1, 0]);
 
-                const betweenKeysExclusive = tree.findPath(1.5, isLeft, isExclusive);
-                expect(betweenKeysExclusive.toArray()).to.deep.equal([1, 0]);
+                const entriesKeysExclusive = tree.findPath(1.5, isLeft, isExclusive);
+                expect(entriesKeysExclusive.toArray()).to.deep.equal([1, 0]);
 
-                const betweenKeys2 = tree.findPath(1.5, isRight, isInclusive);
-                expect(betweenKeys2.toArray()).to.deep.equal([0, 0]);
+                const entriesKeys2 = tree.findPath(1.5, isRight, isInclusive);
+                expect(entriesKeys2.toArray()).to.deep.equal([0, 0]);
 
-                const betweenKeys2Exclusive = tree.findPath(1.5, isRight, isExclusive);
-                expect(betweenKeys2Exclusive.toArray()).to.deep.equal([0, 0]);
+                const entriesKeys2Exclusive = tree.findPath(1.5, isRight, isExclusive);
+                expect(entriesKeys2Exclusive.toArray()).to.deep.equal([0, 0]);
 
                 const nonexistingPath2 = tree.findPath(4, isRight, isInclusive);
                 expect(nonexistingPath2.toArray()).to.deep.equal([1, 1]);

@@ -240,9 +240,20 @@ extend(BPlusTree.prototype, {
         const fromPath = this.findPath(fromKey, fromIsRight, rangeSpec.fromInclusive);
         const toPath = this.findPath(toKey, toIsRight, rangeSpec.toInclusive);
 
+
         if (fromPath === null || toPath === null) {
             return getEmptyIterator();
         }
+
+        // Example: range from 0 to 1, both exclusive bounds.
+        // fromPath will point to 1, toPath to 0, which means
+        // we should return an empty iterator.
+        //
+        // In other words, the sort order of the from and to
+        // arguments must match the sort order of the paths.
+        const pathCmp = fromPath.compareTo(toPath);
+        const gotNegativeRange = pathCmp !== 0 && pathCmp > 0 === !isReverse;
+        if (gotNegativeRange) return getEmptyIterator();
 
         return this._iteratorFromTo(
             extractor,
@@ -250,20 +261,6 @@ extend(BPlusTree.prototype, {
             toPath,
             isReverse
         );
-    },
-
-    between(fromKey, toKey) {
-        if (arguments.length === 1) {
-            const rangeSpec = arguments[0];
-            return this._baseBetween(extractEntry, rangeSpec);
-        }
-
-        const spec = {
-            from: fromKey,
-            to: toKey,
-        };
-
-        return this._baseBetween(extractEntry, spec);
     },
 
     /**
@@ -540,7 +537,7 @@ const makeIteratorMethod = extractor =>
             return this._iterateAllWithExtractFn(extractor);
         } else if (arguments.length === 1) {
             const spec = arguments[0];
-            this._baseBetween(
+            return this._baseBetween(
                 extractor,
                 spec
             );

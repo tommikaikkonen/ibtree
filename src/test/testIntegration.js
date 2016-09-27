@@ -54,19 +54,20 @@ function assertTreeOrder(order, tree) {
     });
 }
 
-// const testSizes = range(0, 500);
-// const loops = range(0, 10);
-const testSizes = range(0, 500);
-testSizes.unshift(0, 1, 2, 3);
-const loops = range(0, 10);
+const mandatoryTestSizes = range(0, 6);
+const randomTestSizes = range(6, 500);
+const TESTS = 10;
 
-loops.forEach(() => {
-    if (!testSizes.length) return;
-    const testSizeRanIdx = random(0, testSizes.length - 1);
+const testSizes = mandatoryTestSizes.concat(
+    range(0, TESTS).map(() => {
+        const randomIdx = random(0, randomTestSizes.length - 1);
+        const testSize = randomTestSizes[randomIdx];
+        randomTestSizes.splice(randomIdx, 1);
+        return testSize;
+    })
+);
 
-    const testSize = testSizes[testSizeRanIdx];
-    testSizes.splice(testSizeRanIdx, 1);
-
+testSizes.forEach(testSize => {
     describe(`Integration test. Size: ${testSize}`, () => {
         describe('bplus Tree', () => {
             it('init', () => {
@@ -223,16 +224,17 @@ loops.forEach(() => {
 
                     assertTreeOrder(tree.order, tree);
 
+                    const end = Math.max(testSize - 2, 0);
+                    const start = Math.min(2, end);
+
+                    const result = Array.from(tree.entries(start, end));
+
                     if (testSize === 0) {
-                        expect(Array.from(tree.between(0, 10)).length).to.equal(0);
+                        expect(result.length).to.equal(0);
+                    } else if (start === end) {
+                        expect(result.length).to.equal(1);
                     } else {
-                        let end = testSize - 2;
-                        const start = 0;
-                        if (end < start) {
-                            end = start;
-                        }
                         const n = end - start + 1;
-                        const result = Array.from(tree.between(start, end));
                         expect(result.length).to.equal(n);
                     }
                 });
@@ -247,21 +249,19 @@ loops.forEach(() => {
 
                     assertTreeOrder(tree.order, tree);
 
-                    if (testSize === 0) {
-                        expect(Array.from(tree.between({
-                            from: 0,
-                            to: 10,
+                    const end = Math.max(testSize - 2, 0);
+                    const start = Math.min(2, end);
+
+                    if (start === end) {
+                        expect(Array.from(tree.entries({
+                            from: start,
+                            to: end,
                             fromInclusive: false,
                             toInclusive: false,
                         })).length).to.equal(0);
                     } else {
-                        let end = testSize - 2;
-                        const start = 0;
-                        if (end < start) {
-                            end = start;
-                        }
                         const n = end - start + 1;
-                        const result = Array.from(tree.between({
+                        const result = Array.from(tree.entries({
                             from: start,
                             to: end,
                             fromInclusive: false,
@@ -281,7 +281,7 @@ loops.forEach(() => {
 
                     assertTreeOrder(tree.order, tree);
 
-                    const result = Array.from(tree.between(-10, testSize + 10));
+                    const result = Array.from(tree.entries(-10, testSize + 10));
                     expect(result).to.have.length(testSize);
                 });
 
@@ -295,7 +295,7 @@ loops.forEach(() => {
 
                     assertTreeOrder(tree.order, tree);
 
-                    const result = Array.from(tree.between(testSize + 10, -10));
+                    const result = Array.from(tree.entries(testSize + 10, -10));
                     expect(result).to.have.length(testSize);
                 });
 
@@ -309,7 +309,7 @@ loops.forEach(() => {
 
                     assertTreeOrder(tree.order, tree);
 
-                    const result = Array.from(tree.between(testSize + 10, testSize + 15));
+                    const result = Array.from(tree.entries(testSize + 10, testSize + 15));
                     expect(result).to.have.lengthOf(0);
                 });
 
@@ -324,7 +324,7 @@ loops.forEach(() => {
                     assertTreeOrder(tree.order, tree);
 
                     if (testSize === 0) {
-                        expect(Array.from(tree.between(10, 0)).length).to.equal(0);
+                        expect(Array.from(tree.entries(10, 0)).length).to.equal(0);
                     } else {
                         let end = testSize - 2;
                         const start = 0;
@@ -332,8 +332,8 @@ loops.forEach(() => {
                             end = start;
                         }
                         const n = end - start + 1;
-                        const result = Array.from(tree.between(start, end));
-                        const reverseResult = Array.from(tree.between(end, start));
+                        const result = Array.from(tree.entries(start, end));
+                        const reverseResult = Array.from(tree.entries(end, start));
 
                         const _resultReversed = result.slice();
                         _resultReversed.reverse();
