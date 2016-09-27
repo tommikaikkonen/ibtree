@@ -1723,9 +1723,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return arr;
 	    },
 	    compareTo: function compareTo(otherPath) {
-	        var a = this._path;
-	        var b = otherPath._path;
-	        return a === b ? 0 : a < b ? -1 : 1; // eslint-disable-line no-nested-ternary
+	        var thisArr = this.toArray();
+	        var otherArr = otherPath.toArray();
+	
+	        for (var i = 0; i < this.length; i++) {
+	            var a = thisArr[i];
+	            var b = otherArr[i];
+	            if (a !== b) {
+	                return a < b ? -1 : 1;
+	            }
+	        }
+	        return 0;
 	    },
 	    increment: function increment(level) {
 	        var newPath = this.set(level, this.get(level) + 1);
