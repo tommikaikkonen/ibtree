@@ -278,20 +278,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return (0, _utils.getEmptyIterator)();
 	        }
 	
+	        // Example: range from 0 to 1, both exclusive bounds.
+	        // fromPath will point to 1, toPath to 0, which means
+	        // we should return an empty iterator.
+	        //
+	        // In other words, the sort order of the from and to
+	        // arguments must match the sort order of the paths.
+	        var pathCmp = fromPath.compareTo(toPath);
+	        var gotNegativeRange = pathCmp !== 0 && pathCmp > 0 === !isReverse;
+	        if (gotNegativeRange) return (0, _utils.getEmptyIterator)();
+	
 	        return this._iteratorFromTo(extractor, fromPath, toPath, isReverse);
-	    },
-	    between: function between(fromKey, toKey) {
-	        if (arguments.length === 1) {
-	            var rangeSpec = arguments[0];
-	            return this._baseBetween(extractEntry, rangeSpec);
-	        }
-	
-	        var spec = {
-	            from: fromKey,
-	            to: toKey
-	        };
-	
-	        return this._baseBetween(extractEntry, spec);
 	    },
 	
 	
@@ -555,7 +552,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	            return this._iterateAllWithExtractFn(extractor);
 	        } else if (arguments.length === 1) {
 	            var _spec = arguments[0];
-	            this._baseBetween(extractor, _spec);
+	            return this._baseBetween(extractor, _spec);
 	        }
 	
 	        var spec = {
